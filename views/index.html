@@ -169,6 +169,7 @@
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
       height: 100%;
+      display: none; /* Hidden by default */
     }
 
     .chat-container h3 {
@@ -275,7 +276,7 @@
 <body>
   <div class="container">
     <!-- Barra lateral -->
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar" id="sidebar" style="display: none;">
       <h3>Conversaciones</h3>
       <div id="conversations"></div>
     </div>
@@ -304,7 +305,7 @@
     <div class="chat-container" id="chat-container">
       <h3>Chat</h3>
       <div class="message-header">
-        <input type="text" id="toUser" placeholder="Usuario receptor" />
+        <input type="text" id="toUser" placeholder="Usuario receptor" readonly />
       </div>
       <textarea id="msgInput" placeholder="Escribe tu mensaje..."></textarea>
       <button onclick="sendMessage()">Enviar</button>
@@ -319,6 +320,7 @@
   <script>
     const baseUrl = 'https://chat-en-tiempo-real-ll1q.onrender.com/api/v1/auth';
     let socket = null;
+    let currentUser = null;
 
     // Agregar el mensaje al chat
     function appendMessage(text, time) {
@@ -329,9 +331,9 @@
       if (text.includes("→")) {
         const parts = text.split("→");
         const sender = parts[0].trim();
-        const currentUser = document.getElementById("toUser").value;
+        const currentChatUser = document.getElementById("toUser").value;
         
-        if (sender === currentUser) {
+        if (sender !== currentUser.username) {
           div.classList.add("receiver-message");
         } else {
           div.classList.add("user-message");
@@ -340,59 +342,60 @@
         div.classList.add("system");
       }
 
-      const timeDiv = document.createElement("div");
-      timeDiv.className = "message-time";
-      timeDiv.textContent = time;
-
-      div.innerHTML = `${text} <div class="message-time">${timeDiv.textContent}</div>`;
+      div.innerHTML = `${text} <div class="message-time">${time}</div>`;
       document.getElementById("chatBox").appendChild(div);
       div.scrollIntoView({ behavior: "smooth" });
     }
 
     // Verificar si el usuario está autenticado al cargar la página
     async function checkAuthentication() {
-      const res = await fetch(`${baseUrl}/me`, { method: 'GET', credentials: 'include' });
-      const data = await res.json();
-      if (data && data.username) {
-        document.getElementById("auth-form").style.display = "none"; // Ocultar el formulario de autenticación
-        document.getElementById("chat-container").style.display = "block"; // Mostrar el chat
-        connectSocket(); // Conectar con Socket.IO
-        getConversations(); // Obtener las conversaciones del usuario
-      } else {
-        document.getElementById("auth-form").style.display = "block"; // Mostrar el formulario de autenticación
-        document.getElementById("chat-container").style.display = "none"; // Ocultar el chat
+      try {
+        const res = await fetch(`${baseUrl}/me`, { method: 'GET', credentials: 'include' });
+        const data = await res.json();
+        
+        if (data && data.username) {
+          currentUser = data; // Guardar usuario actual
+          
+          // Mostrar el chat y la barra lateral
+          document.getElementById("auth-form").style.display = "none";
+          document.getElementById("chat-container").style.display = "flex";
+          document.getElementById("sidebar").style.display = "flex";
+          
+          // Conectar con Socket.IO y obtener conversaciones
+          connectSocket();
+        } else {
+          // Mostrar formulario de autenticación
+          document.getElementById("auth-form").style.display = "flex";
+          document.getElementById("chat-container").style.display = "none";
+          document.getElementById("sidebar").style.display = "none";
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        document.getElementById("auth-form").style.display = "flex";
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("sidebar").style.display = "none";
       }
     }
 
-    function updateConversations(messages) {
-      const currentUserId = getCurrentUserId(); // Asegúrate de que esto esté bien implementado
-      const conversationsMap = new Map();
-
-      messages.forEach(msg => {
-        const convoId = msg.conversation_id;
-        if (!conversationsMap.has(convoId)) {
-          const isCurrentUserUser1 = msg.user1_id === currentUserId;
-          const otherUsername = isCurrentUserUser1 ? msg.user2_username : msg.user1_username;
-          const otherUserId = isCurrentUserUser1 ? msg.user2_id : msg.user1_id;
-
-          conversationsMap.set(convoId, {
-            conversationId: convoId,
-            otherUserId: otherUserId,
-            otherUsername: otherUsername,
-            lastMessage: msg.content,
-            time: msg.last_message_time,
-          });
-        }
-      });
-
+    function updateConversations(users) {
       const conversationsContainer = document.getElementById("conversations");
       conversationsContainer.innerHTML = '';
-
-      conversationsMap.forEach((convo) => {
+      
+      // Si no hay conversaciones, mostrar mensaje
+      if (!users || users.length === 0) {
         const div = document.createElement("div");
         div.className = "conversation";
-        div.textContent = convo.otherUsername;
-        div.onclick = () => startChat(convo.otherUsername); // O pasa el ID si prefieres
+        div.textContent = "No hay conversaciones";
+        conversationsContainer.appendChild(div);
+        return;
+      }
+      
+      // Crear un elemento para cada conversación
+      users.forEach(user => {
+        const div = document.createElement("div");
+        div.className = "conversation";
+        div.textContent = user.username;
+        div.onclick = () => startChat(user.username);
         conversationsContainer.appendChild(div);
       });
     }
@@ -422,59 +425,66 @@
 
     // Registro de usuario
     async function register() {
-      const username = document.getElementById("username").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const res = await fetch(`${baseUrl}/register`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
-      const data = await res.json();
-      alert(data.message || "Registro exitoso");
+      try {
+        const username = document.getElementById("username").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        
+        if (!username || !email || !password) {
+          alert("Por favor, completa todos los campos");
+          return;
+        }
+        
+        const res = await fetch(`${baseUrl}/register`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email, password }),
+        });
+        
+        const data = await res.json();
+        alert(data.message || "Registro exitoso");
+        
+        // Cambiar al formulario de login después del registro exitoso
+        toggleForms();
+      } catch (error) {
+        console.error("Error registering:", error);
+        alert("Error al registrarse");
+      }
     }
 
     // Login de usuario
     async function login() {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-      const res = await fetch(`${baseUrl}/login`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      alert(data.message || "Login exitoso");
-
-      // Conectar con Socket.IO después del login
-      connectSocket();
-
-      // Ocultar el formulario de autenticación
-      document.getElementById("auth-form").style.display = "none";
-      document.getElementById("chat-container").style.display = "block"; // Mostrar el chat
-    }
-
-    // Obtener las conversaciones del usuario
-    async function getConversations() {
-      const res = await fetch(`${baseUrl}/me`, {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await res.json();
-      const conversations = data.conversations || [];
-      
-      const conversationsContainer = document.getElementById("conversations");
-      conversationsContainer.innerHTML = '';
-      
-      conversations.forEach(convo => {
-        const div = document.createElement("div");
-        div.className = "conversation";
-        div.textContent = convo.username;
-        div.onclick = () => startChat(convo.username);
-        conversationsContainer.appendChild(div);
-      });
+      try {
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+        
+        if (!email || !password) {
+          alert("Por favor, completa todos los campos");
+          return;
+        }
+        
+        const res = await fetch(`${baseUrl}/login`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        
+        if (!res.ok) {
+          const error = await res.json();
+          alert(error.message || "Error al iniciar sesión");
+          return;
+        }
+        
+        const data = await res.json();
+        
+        // Verificar si el login fue exitoso
+        await checkAuthentication();
+      } catch (error) {
+        console.error("Error logging in:", error);
+        alert("Error al iniciar sesión");
+      }
     }
 
     // Conexión con Socket.IO
@@ -482,46 +492,69 @@
       socket = io("https://chat-en-tiempo-real-ll1q.onrender.com", { withCredentials: true });
 
       socket.on("connect", () => {
-        document.getElementById("chat-container").style.display = "block"; // Mostrar el chat
-        getConversations(); // Obtener conversaciones cuando el usuario se conecta
-      });
-
-      socket.on("message", (data) => {
-        const currentChatUser = document.getElementById("toUser").value;
-        console.log("📨 Recibido:", data);
-        console.log("👤 Chat actual:", currentChatUser);
-
-        const isToCurrentChat = data.de === currentChatUser || data.para === currentChatUser;
-
-        if (isToCurrentChat) {
-          appendMessage(`${data.de} → ${data.para}: ${data.message}`, new Date(data.date_time).toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false // usa formato 24h, cambia a true para 12h con AM/PM
-        }))} else {
-          console.log("📭 Mensaje ignorado: no es del chat abierto");
-          console.log("⚖️ Comparando:", data.de, "==", currentChatUser, "||", data.para, "==", currentChatUser);
-        }
-      });
-
-      socket.on("disconnect", () => {
-        appendMessage("🔌 Desconectado del servidor", true);
+        console.log("Conectado al servidor socket.io");
+        document.getElementById("chatBox").innerHTML = '';
+        appendMessage("🔌 Conectado al servidor", new Date().toLocaleTimeString());
       });
 
       socket.on("earrings messages", (data) => {
-        if (data.conversations) {
-          updateConversations(data.conversations);
+        console.log("Mensajes pendientes recibidos:", data);
+        
+        if (data.users && data.users.length > 0) {
+          updateConversations(data.users);
+        }
+        
+        // También se podrían mostrar los mensajes pendientes aquí si es necesario
+      });
+
+      socket.on("message", (data) => {
+        console.log("Mensaje recibido:", data);
+        const currentChatUser = document.getElementById("toUser").value;
+        
+        // Mostrar el mensaje si corresponde a la conversación actual
+        if (data.de === currentChatUser || data.para === currentChatUser) {
+          const formattedTime = new Date(data.date_time).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          
+          appendMessage(`${data.de} → ${data.para}: ${data.message}`, formattedTime);
+        }
+      });
+
+      socket.on("message status", (data) => {
+        console.log("Estado del mensaje:", data);
+        if (data.status === "error") {
+          appendMessage(`Error: ${data.error}`, new Date().toLocaleTimeString());
         }
       });
 
       socket.on("conversationMessages", (messages) => {
+        console.log("Mensajes de la conversación:", messages);
         const chatBox = document.getElementById("chatBox");
         chatBox.innerHTML = '';
-
+        
+        if (!messages || messages.length === 0) {
+          appendMessage("No hay mensajes en esta conversación", new Date().toLocaleTimeString());
+          return;
+        }
+        
         messages.forEach(msg => {
+          const formattedTime = new Date(msg.date_time).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          
           const text = `${msg.sender_username} → ${msg.receiver_username}: ${msg.content}`;
-          appendMessage(text, msg.date_time);
+          appendMessage(text, formattedTime);
         });
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Desconectado del servidor");
+        appendMessage("🔌 Desconectado del servidor", new Date().toLocaleTimeString());
       });
     }
 
@@ -529,57 +562,56 @@
     function sendMessage() {
       const msg = document.getElementById("msgInput").value;
       const receiver = document.getElementById("toUser").value;
-      const time = new Date().toLocaleTimeString();
-
-      if (!socket || !socket.connected) {
-        alert("No estás conectado");
+      
+      if (!msg.trim()) {
+        alert("Escribe un mensaje");
         return;
       }
       
-      socket.emit("message", msg, receiver, time);
+      if (!receiver.trim()) {
+        alert("Selecciona un destinatario");
+        return;
+      }
+      
+      if (!socket || !socket.connected) {
+        alert("No estás conectado al servidor");
+        return;
+      }
+      
+      socket.emit("message", msg, receiver);
       document.getElementById("msgInput").value = "";
     }
 
-    // Iniciar un chat con un usuario
-    function startChat(otherUsername) {
-      document.getElementById("toUser").value = otherUsername;
-      document.getElementById("chatBox").innerHTML = '';
-      if (socket && socket.connected) {
-        socket.emit("getConversation", { username: otherUsername });
-      }
-    }
-
     async function logout() {
-      const res = await fetch(`${baseUrl}/logout`, {
-        method: 'POST',
-        credentials: 'include', // Incluye cookies para el request
-      });
-
-      const data = await res.json();
-      alert(data.message || "Sesión cerrada exitosamente");
-
-      // Desconectar el socket y limpiar la interfaz
-      if (socket) {
-        socket.disconnect();
+      try {
+        const res = await fetch(`${baseUrl}/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        
+        const data = await res.json();
+        alert(data.message || "Sesión cerrada exitosamente");
+        
+        // Desconectar el socket
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+        
+        // Reiniciar variables de estado
+        currentUser = null;
+        
+        // Actualizar la interfaz
+        document.getElementById("auth-form").style.display = "flex";
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("sidebar").style.display = "none";
+        document.getElementById("chatBox").innerHTML = "";
+        document.getElementById("conversations").innerHTML = "";
+        document.getElementById("toUser").value = "";
+      } catch (error) {
+        console.error("Error logging out:", error);
+        alert("Error al cerrar sesión");
       }
-
-      // Mostrar el formulario de autenticación nuevamente
-      document.getElementById("chat-container").style.display = "none";
-      document.getElementById("auth-form").style.display = "block";
-    }
-
-    let currentUser = null;
-
-    async function checkAuthentication() {
-      const res = await fetch(`${baseUrl}/me`, { method: 'GET', credentials: 'include' });
-      const data = await res.json();
-      if (data && data.username) {
-        currentUser = data; // Guardar usuario actual
-      }
-    }
-
-    function getCurrentUserId() {
-      return currentUser?.id; // O como venga del backend
     }
 
     // Verificar la autenticación cuando se carga la página
