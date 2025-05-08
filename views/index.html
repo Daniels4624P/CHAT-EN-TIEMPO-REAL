@@ -118,7 +118,7 @@
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    const baseUrl = 'http://localhost:3000/api/v1/auth';
+    const baseUrl = 'https://chat-en-tiempo-real-ll1q.onrender.com/api/v1/auth';
     let socket = null;
 
     // Agregar el mensaje al chat
@@ -265,7 +265,7 @@
 
     // Conexión con Socket.IO
     function connectSocket() {
-      socket = io("http://localhost:3000", { withCredentials: true });
+      socket = io("https://chat-en-tiempo-real-ll1q.onrender.com", { withCredentials: true });
 
       socket.on("connect", () => {
         document.getElementById("chat-container").style.display = "block"; // Mostrar el chat
