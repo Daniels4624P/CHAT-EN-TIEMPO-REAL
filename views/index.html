@@ -64,36 +64,6 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .new-conversation {
-      display: flex;
-      margin-bottom: 1rem;
-      gap: 0.5rem;
-    }
-
-    .new-conversation input {
-      flex-grow: 1;
-      padding: 0.5rem;
-      border-radius: var(--border-radius);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background-color: var(--input-bg);
-      color: var(--text-color);
-      font-size: 0.9rem;
-    }
-
-    .new-conversation button {
-      background-color: var(--accent-color);
-      border: none;
-      border-radius: var(--border-radius);
-      padding: 0.5rem;
-      color: white;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .new-conversation button:hover {
-      background-color: #5a52e3;
-    }
-
     #conversations {
       overflow-y: auto;
       flex-grow: 1;
@@ -213,27 +183,10 @@
       display: flex;
       align-items: center;
       margin-bottom: 1rem;
-      gap: 0.5rem;
     }
 
     .message-header input {
-      flex-grow: 1;
       margin-bottom: 0;
-    }
-
-    .change-recipient-btn {
-      background-color: var(--accent-color);
-      color: white;
-      border: none;
-      border-radius: var(--border-radius);
-      padding: 0.75rem;
-      cursor: pointer;
-      min-width: 120px;
-      transition: var(--transition);
-    }
-
-    .change-recipient-btn:hover {
-      background-color: #5a52e3;
     }
 
     #msgInput {
@@ -325,11 +278,6 @@
     <!-- Barra lateral -->
     <div class="sidebar" id="sidebar" style="display: none;">
       <h3>Conversaciones</h3>
-      <!-- Nueva sección para iniciar nueva conversación -->
-      <div class="new-conversation">
-        <input type="text" id="newConversationUser" placeholder="Nombre de usuario" />
-        <button onclick="startNewConversation()">+</button>
-      </div>
       <div id="conversations"></div>
     </div>
 
@@ -357,8 +305,7 @@
     <div class="chat-container" id="chat-container">
       <h3>Chat</h3>
       <div class="message-header">
-        <input type="text" id="toUser" placeholder="Usuario receptor" />
-        <button class="change-recipient-btn" onclick="changeRecipient()">Cambiar</button>
+        <input type="text" id="toUser" placeholder="Usuario receptor" readonly />
       </div>
       <textarea id="msgInput" placeholder="Escribe tu mensaje..."></textarea>
       <button onclick="sendMessage()">Enviar</button>
@@ -374,7 +321,6 @@
     const baseUrl = 'https://chat-en-tiempo-real-ll1q.onrender.com/api/v1/auth';
     let socket = null;
     let currentUser = null;
-    let usersList = [];
 
     // Agregar el mensaje al chat
     function appendMessage(text, time) {
@@ -435,9 +381,6 @@
       const conversationsContainer = document.getElementById("conversations");
       conversationsContainer.innerHTML = '';
       
-      // Almacenar la lista de usuarios para consultas posteriores
-      usersList = users || [];
-      
       // Si no hay conversaciones, mostrar mensaje
       if (!users || users.length === 0) {
         const div = document.createElement("div");
@@ -465,54 +408,6 @@
       if (socket && socket.connected) {
         socket.emit("getConversation", { username: otherUsername });
       }
-    }
-
-    // Función para iniciar una nueva conversación
-    function startNewConversation() {
-      const newUsername = document.getElementById("newConversationUser").value.trim();
-      
-      if (!newUsername) {
-        alert("Por favor, ingresa un nombre de usuario");
-        return;
-      }
-      
-      // Verificar que no sea el usuario actual
-      if (newUsername === currentUser.username) {
-        alert("No puedes iniciar una conversación contigo mismo");
-        return;
-      }
-      
-      // Iniciar chat con el nuevo usuario
-      startChat(newUsername);
-      document.getElementById("newConversationUser").value = "";
-    }
-
-    // Función para cambiar el destinatario del mensaje
-    function changeRecipient() {
-      // Habilitar edición del campo toUser
-      const toUserInput = document.getElementById("toUser");
-      toUserInput.readOnly = false;
-      toUserInput.focus();
-      
-      // Cuando pierda el foco, verificar el usuario
-      toUserInput.onblur = function() {
-        const username = toUserInput.value.trim();
-        if (username) {
-          // Comprobar si es un usuario diferente al actual
-          if (username !== document.getElementById("toUser").dataset.currentUser) {
-            startChat(username);
-          }
-        }
-        toUserInput.readOnly = true;
-      };
-      
-      // También permitir confirmación con Enter
-      toUserInput.onkeydown = function(e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          toUserInput.blur();
-        }
-      };
     }
 
     // Mostrar u ocultar los formularios
@@ -626,12 +521,6 @@
           
           appendMessage(`${data.de} → ${data.para}: ${data.message}`, formattedTime);
         }
-        
-        // Actualizar la lista de conversaciones si es un nuevo contacto
-        if (!usersList.some(user => user.username === data.de) && data.de !== currentUser.username) {
-          // Solicitar actualización de la lista de conversaciones
-          socket.emit("getEarringsMessages");
-        }
       });
 
       socket.on("message status", (data) => {
@@ -677,4 +566,56 @@
       if (!msg.trim()) {
         alert("Escribe un mensaje");
         return;
-    
+      }
+      
+      if (!receiver.trim()) {
+        alert("Selecciona un destinatario");
+        return;
+      }
+      
+      if (!socket || !socket.connected) {
+        alert("No estás conectado al servidor");
+        return;
+      }
+      
+      socket.emit("message", msg, receiver);
+      document.getElementById("msgInput").value = "";
+    }
+
+    async function logout() {
+      try {
+        const res = await fetch(`${baseUrl}/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        
+        const data = await res.json();
+        alert(data.message || "Sesión cerrada exitosamente");
+        
+        // Desconectar el socket
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+        
+        // Reiniciar variables de estado
+        currentUser = null;
+        
+        // Actualizar la interfaz
+        document.getElementById("auth-form").style.display = "flex";
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("sidebar").style.display = "none";
+        document.getElementById("chatBox").innerHTML = "";
+        document.getElementById("conversations").innerHTML = "";
+        document.getElementById("toUser").value = "";
+      } catch (error) {
+        console.error("Error logging out:", error);
+        alert("Error al cerrar sesión");
+      }
+    }
+
+    // Verificar la autenticación cuando se carga la página
+    window.onload = checkAuthentication;
+  </script>
+</body>
+</html>
