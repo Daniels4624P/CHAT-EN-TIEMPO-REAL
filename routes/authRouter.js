@@ -21,12 +21,12 @@ router.post('/login', async (req, res, next) => {
         return res.cookie('accessToken', accessToken, {
             httpOnly: true,
             sameSite: 'strict',
-            secure: false,
+            secure: true,
             maxAge: 1000 * 60 * 15
         }).cookie('refreshToken', refreshToken, {
             httpOnly: true,
             sameSite: 'strict',
-            secure: false,
+            secure: true,
             maxAge: 1000 * 60 * 60 * 24 * 7
         }).json(accessToken)
     } catch (err) {
@@ -61,12 +61,12 @@ router.post('/refresh', async (req, res, next) => {
         return res.cookie('accessToken', result.newAccessToken, {
             httpOnly: true,
             sameSite: 'strict',
-            secure: false,
+            secure: true,
             maxAge: 1000 * 60 * 15
         }).cookie('refreshToken', result.newRefreshToken, {
             httpOnly: true,
             sameSite: 'strict',
-            secure: false,
+            secure: true,
             maxAge: 1000 * 60 * 60 * 24 * 7
         }).json(result)
     } catch (err) {
