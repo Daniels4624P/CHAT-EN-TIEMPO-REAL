@@ -122,13 +122,22 @@
       background: #545b62;
     }
 
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
     .chat-container {
       display: none;
       background: white;
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       width: 100%;
-      max-width: 1000px;
+      max-width: 1200px;
       height: 80vh;
       padding: 0;
       overflow: hidden;
@@ -167,11 +176,37 @@
     }
 
     .chat-sidebar {
-      width: 300px;
+      width: 350px;
       border-right: 2px solid #e1e5e9;
       display: flex;
       flex-direction: column;
       background: #f8f9fa;
+    }
+
+    .chat-tabs {
+      display: flex;
+      border-bottom: 2px solid #e1e5e9;
+    }
+
+    .chat-tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      background: #f8f9fa;
+      border: none;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+
+    .chat-tab.active {
+      background: white;
+      color: #4A90E2;
+      border-bottom: 2px solid #4A90E2;
+    }
+
+    .chat-tab:hover {
+      background: #e9ecef;
     }
 
     .chat-list-header {
@@ -237,6 +272,15 @@
       font-weight: bold;
     }
 
+    .group-badge {
+      background: #28a745;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      margin-left: 0.5rem;
+    }
+
     .typing-indicator-sidebar {
       font-size: 0.7rem;
       color: #4A90E2;
@@ -254,6 +298,34 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+    }
+
+    .chat-info-header {
+      padding: 1rem;
+      border-bottom: 1px solid #e1e5e9;
+      background: #f8f9fa;
+      display: none;
+    }
+
+    .chat-info-header.show {
+      display: block;
+    }
+
+    .chat-info-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-info-subtitle {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .group-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
     }
 
     .chat-messages {
@@ -302,6 +374,29 @@
       margin-right: 20%;
     }
 
+    .message-group {
+      float: none;
+      background: #e3f2fd;
+      border-radius: 15px;
+      padding: 0.75rem;
+      margin: 0.5rem auto;
+      max-width: 90%;
+    }
+
+    .message-group.message-outgoing {
+      background: #dcf8c6;
+      margin-left: auto;
+      margin-right: 0;
+      float: right;
+    }
+
+    .message-group.message-incoming {
+      background: #e3f2fd;
+      margin-left: 0;
+      margin-right: auto;
+      float: left;
+    }
+
     .message-header {
       font-size: 0.8rem;
       color: #666;
@@ -317,6 +412,21 @@
       color: #666;
       text-align: right;
       margin-top: 0.25rem;
+    }
+
+    .message-pending {
+      opacity: 0.6;
+      position: relative;
+    }
+
+    .message-pending::after {
+      content: "Enviando...";
+      position: absolute;
+      bottom: 5px;
+      right: 10px;
+      font-size: 0.6rem;
+      color: #999;
+      font-style: italic;
     }
 
     .loading {
@@ -438,6 +548,63 @@
       color: #4A90E2;
     }
 
+    .user-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e1e5e9;
+      border-radius: 8px;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .user-item {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.25rem;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-item button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+      width: auto;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .connection-status {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      color: white;
+      background-color: #6c757d;
+      z-index: 1000;
+    }
+
+    .connection-status.connected {
+      background-color: #28a745;
+    }
+
+    .connection-status.disconnected {
+      background-color: #dc3545;
+    }
+
+    .connection-status.connecting {
+      background-color: #ffc107;
+      animation: pulse 1.5s infinite;
+    }
+
     @media (max-width: 768px) {
       .auth-container {
         flex-direction: column;
@@ -459,13 +626,13 @@
 
       .chat-sidebar {
         width: 100%;
-        height: 30%;
+        height: 40%;
         border-right: none;
         border-bottom: 2px solid #e1e5e9;
       }
 
       .chat-main {
-        height: 70%;
+        height: 60%;
       }
     }
   </style>
@@ -478,7 +645,7 @@
 
   <div class="header">
     <h1>WebChat</h1>
-    <p>Una aplicación de chat en tiempo real</p>
+    <p>Una aplicación de chat en tiempo real con grupos</p>
   </div>
 
   <div class="auth-container" id="authContainer">
@@ -497,6 +664,7 @@
           <label for="regPassword">Contraseña</label>
           <input type="password" id="regPassword" name="password" placeholder="Mínimo 6 caracteres" required />
         </div>
+        <div class="error-message" id="regErrorMessage"></div>
         <button type="submit" class="btn btn-primary">Registrarse</button>
       </form>
     </div>
@@ -512,6 +680,7 @@
           <label for="loginPassword">Contraseña</label>
           <input type="password" id="loginPassword" name="password" placeholder="Tu contraseña" required />
         </div>
+        <div class="error-message" id="loginErrorMessage"></div>
         <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
       </form>
     </div>
@@ -531,12 +700,17 @@
 
     <div class="chat-layout">
       <div class="chat-sidebar">
+        <div class="chat-tabs">
+          <button class="chat-tab active" id="chatsTab">Chats</button>
+          <button class="chat-tab" id="groupsTab">Grupos</button>
+        </div>
+        
         <div class="chat-list-header">
-          <h3>Mis Chats</h3>
+          <h3 id="listTitle">Mis Chats</h3>
           <button class="btn btn-primary" id="newChatBtn" style="width: auto; padding: 0.5rem 1rem;">Nuevo Chat</button>
         </div>
+        
         <div class="chat-list" id="chatList">
-          <!-- Chat list will be populated here -->
           <div class="empty-state">
             <div class="empty-state-icon">💬</div>
             <p>No tienes chats activos</p>
@@ -546,14 +720,24 @@
       </div>
 
       <div class="chat-main">
+        <div class="chat-info-header" id="chatInfoHeader">
+          <div class="chat-info-title" id="chatInfoTitle"></div>
+          <div class="chat-info-subtitle" id="chatInfoSubtitle"></div>
+          <div class="group-actions" id="groupActions">
+            <button class="btn btn-success" id="inviteUsersBtn" style="width: auto; padding: 0.5rem 1rem;">Invitar Usuarios</button>
+          </div>
+        </div>
+        
         <div class="chat-messages" id="chatMessages">
           <div class="empty-state">
             <div class="empty-state-icon">👋</div>
-            <p>Selecciona un chat para ver los mensajes</p>
+            <p>Selecciona un chat o grupo para ver los mensajes</p>
             <p>o crea uno nuevo para comenzar a chatear</p>
           </div>
         </div>
+        
         <div class="typing-indicator" id="typingIndicator"></div>
+        
         <div class="chat-input-container">
           <input 
             type="text" 
@@ -580,10 +764,52 @@
           <label for="receiverUsername">Usuario Destinatario</label>
           <input type="text" id="receiverUsername" name="receiverUsername" placeholder="Nombre de usuario" required />
         </div>
+        <div class="error-message" id="newChatErrorMessage"></div>
         <button type="submit" class="btn btn-primary">Crear Chat</button>
       </form>
     </div>
   </div>
+
+  <!-- Modal para crear nuevo grupo -->
+  <div class="modal" id="newGroupModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Crear Nuevo Grupo</h3>
+        <span class="modal-close" id="closeGroupModalBtn">&times;</span>
+      </div>
+      <form id="newGroupForm">
+        <div class="form-group">
+          <label for="groupName">Nombre del Grupo</label>
+          <input type="text" id="groupName" name="groupName" placeholder="Nombre del grupo" required />
+        </div>
+        <div class="error-message" id="newGroupErrorMessage"></div>
+        <button type="submit" class="btn btn-primary">Crear Grupo</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para invitar usuarios al grupo -->
+  <div class="modal" id="inviteUsersModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Invitar Usuarios al Grupo</h3>
+        <span class="modal-close" id="closeInviteModalBtn">&times;</span>
+      </div>
+      <form id="inviteUsersForm">
+        <div class="form-group">
+          <label for="usersToInvite">Usuarios a Invitar (separados por comas)</label>
+          <input type="text" id="usersToInvite" name="usersToInvite" placeholder="usuario1, usuario2, usuario3" required />
+        </div>
+        <div class="error-message" id="inviteUsersErrorMessage"></div>
+        <div class="user-list" id="selectedUsersList">
+          <!-- Lista de usuarios seleccionados -->
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar Invitaciones</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="connection-status" id="connectionStatus">Desconectado</div>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
@@ -608,16 +834,53 @@
     const closeModalBtn = document.getElementById('closeModalBtn');
     const newChatForm = document.getElementById('newChatForm');
     const typingIndicator = document.getElementById('typingIndicator');
+    const connectionStatus = document.getElementById('connectionStatus');
+    
+    // Elementos de error
+    const regErrorMessage = document.getElementById('regErrorMessage');
+    const loginErrorMessage = document.getElementById('loginErrorMessage');
+    const newChatErrorMessage = document.getElementById('newChatErrorMessage');
+    const newGroupErrorMessage = document.getElementById('newGroupErrorMessage');
+    const inviteUsersErrorMessage = document.getElementById('inviteUsersErrorMessage');
+    
+    // Nuevos elementos para grupos
+    const chatsTab = document.getElementById('chatsTab');
+    const groupsTab = document.getElementById('groupsTab');
+    const listTitle = document.getElementById('listTitle');
+    const chatInfoHeader = document.getElementById('chatInfoHeader');
+    const chatInfoTitle = document.getElementById('chatInfoTitle');
+    const chatInfoSubtitle = document.getElementById('chatInfoSubtitle');
+    const groupActions = document.getElementById('groupActions');
+    const inviteUsersBtn = document.getElementById('inviteUsersBtn');
+    
+    // Modales para grupos
+    const newGroupModal = document.getElementById('newGroupModal');
+    const closeGroupModalBtn = document.getElementById('closeGroupModalBtn');
+    const newGroupForm = document.getElementById('newGroupForm');
+    const inviteUsersModal = document.getElementById('inviteUsersModal');
+    const closeInviteModalBtn = document.getElementById('closeInviteModalBtn');
+    const inviteUsersForm = document.getElementById('inviteUsersForm');
+    const selectedUsersList = document.getElementById('selectedUsersList');
 
     // Estado de la aplicación
     let currentUser = null;
     let socket = null;
     let activeChat = null;
+    let activeGroup = null;
     let chats = [];
+    let groups = [];
     let typingTimeout = null;
     let unreadMessages = {}; // Para almacenar mensajes no leídos por chat
+    let unreadGroupMessages = {}; // Para almacenar mensajes no leídos por grupo
     let notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     let typingUsers = {}; // Para almacenar qué usuarios están escribiendo en qué chats
+    let currentView = 'chats'; // 'chats' o 'groups'
+    let reconnectAttempts = 0;
+    let maxReconnectAttempts = 5;
+    let reconnectInterval = 3000; // 3 segundos
+    let reconnectTimer = null;
+    let processedMessages = new Set(); // Para evitar duplicados
+    let pendingMessages = new Map(); // Para rastrear mensajes pendientes
     
     // Funciones de utilidad
     function showNotification(message, type = 'info') {
@@ -643,6 +906,10 @@
       loading.style.display = 'none';
       authContainer.style.display = 'flex';
       chatContainer.style.display = 'none';
+      
+      // Limpiar mensajes de error
+      regErrorMessage.style.display = 'none';
+      loginErrorMessage.style.display = 'none';
     }
 
     function showChat(user) {
@@ -657,6 +924,35 @@
       
       // Inicializar WebSocket solo cuando el usuario esté autenticado
       initializeSocket();
+    }
+
+    function showError(element, message) {
+      element.textContent = message;
+      element.style.display = 'block';
+    }
+
+    function hideError(element) {
+      element.textContent = '';
+      element.style.display = 'none';
+    }
+
+    function updateConnectionStatus(status) {
+      connectionStatus.textContent = status;
+      connectionStatus.className = 'connection-status';
+      
+      switch(status.toLowerCase()) {
+        case 'conectado':
+          connectionStatus.classList.add('connected');
+          break;
+        case 'desconectado':
+          connectionStatus.classList.add('disconnected');
+          break;
+        case 'conectando...':
+          connectionStatus.classList.add('connecting');
+          break;
+        default:
+          break;
+      }
     }
 
     async function makeAuthenticatedRequest(url, options = {}) {
@@ -734,16 +1030,63 @@
     }
 
     function handleLogout() {
+      // Si había un grupo activo, salir automáticamente ANTES de limpiar
+      if (activeGroup && socket) {
+        console.log('Saliendo automáticamente del grupo al hacer logout:', activeGroup.id);
+        socket.emit('leaveGroupForMoment');
+      }
+      
       currentUser = null;
       activeChat = null;
+      activeGroup = null;
       chats = [];
+      groups = [];
       unreadMessages = {};
+      unreadGroupMessages = {};
       typingUsers = {};
+      processedMessages.clear();
+      pendingMessages.clear();
+      
       if (socket) {
         socket.disconnect();
         socket = null;
       }
+      
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      
+      updateConnectionStatus('Desconectado');
       showAuth();
+    }
+
+    function attemptReconnect() {
+      if (reconnectAttempts >= maxReconnectAttempts) {
+        console.log('Máximo de intentos de reconexión alcanzado');
+        updateConnectionStatus('Desconectado');
+        showNotification('No se pudo reconectar al servidor. Por favor, recarga la página.', 'error');
+        return;
+      }
+      
+      reconnectAttempts++;
+      updateConnectionStatus(`Conectando... (Intento ${reconnectAttempts}/${maxReconnectAttempts})`);
+      
+      console.log(`Intentando reconectar (${reconnectAttempts}/${maxReconnectAttempts})...`);
+      
+      // Reiniciar socket
+      initializeSocket();
+      
+      // Programar próximo intento si este falla
+      reconnectTimer = setTimeout(() => {
+        if (socket && socket.connected) {
+          console.log('Reconexión exitosa');
+          reconnectAttempts = 0;
+          updateConnectionStatus('Conectado');
+        } else {
+          attemptReconnect();
+        }
+      }, reconnectInterval);
     }
 
     function initializeSocket() {
@@ -753,34 +1096,84 @@
       }
 
       console.log('Inicializando WebSocket...');
+      updateConnectionStatus('Conectando...');
+      
       socket = io("http://localhost:3000", { 
-        withCredentials: true 
+        withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000
       });
 
       socket.on('connect', () => {
         console.log('Conectado al WebSocket');
+        updateConnectionStatus('Conectado');
+        reconnectAttempts = 0;
+        
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+        
         addSystemMessage('Conectado al chat en tiempo real');
+        
+        // Solicitar chats y grupos al conectar
+        socket.emit('allChats');
+        socket.emit('allGroups');
+        
         // Habilitar chat cuando esté conectado
         messageInput.disabled = false;
         sendBtn.disabled = false;
+        
+        // Si hay un chat o grupo activo, volver a unirse
+        if (activeChat && currentView === 'chats') {
+          console.log('Reconectando al chat activo:', activeChat.id);
+          socket.emit('joinChat', activeChat.id, 50, 0);
+        } else if (activeGroup && currentView === 'groups') {
+          console.log('Reconectando al grupo activo:', activeGroup.id);
+          socket.emit('joinGroup', activeGroup.id, 50, 0);
+        }
       });
 
       socket.on('disconnect', () => {
         console.log('Desconectado del WebSocket');
+        updateConnectionStatus('Desconectado');
         addSystemMessage('Desconectado del chat');
+        
         // Deshabilitar chat cuando esté desconectado
         messageInput.disabled = true;
         sendBtn.disabled = true;
+        
+        // Intentar reconectar automáticamente
+        if (!reconnectTimer) {
+          reconnectTimer = setTimeout(() => attemptReconnect(), reconnectInterval);
+        }
       });
 
+      socket.on('connect_error', (error) => {
+        console.error('Error de conexión WebSocket:', error);
+        updateConnectionStatus('Error de conexión');
+        
+        // No mostrar mensaje de sistema para evitar spam
+        if (reconnectAttempts === 0) {
+          addSystemMessage('Error de conexión al chat');
+        }
+      });
+
+      // Eventos de chats individuales
       socket.on('allChats', (data) => {
         console.log('Chats recibidos:', data);
-        renderChatList(data);
+        chats = Array.isArray(data) ? data : (data ? [data] : []);
+        if (currentView === 'chats') {
+          renderChatList(chats);
+        }
       });
 
       socket.on('messagesChat', (messages) => {
-        console.log('Mensajes recibidos:', messages);
-        renderMessages(messages);
+        console.log('Mensajes de chat recibidos:', messages);
+        renderMessages(messages, 'chat');
       });
 
       socket.on('createChat', (newChat) => {
@@ -790,120 +1183,432 @@
         socket.emit('allChats');
       });
 
-      socket.on('sendMessage', (data) => {
-        console.log('Mensaje recibido:', data);
-        
-        // Buscar el chat correspondiente para obtener el chatId
-        let messageChatId = null;
-        
-        // Si tenemos el chatId en los datos, usarlo
-        if (data.chatId) {
-          messageChatId = data.chatId;
-        } else {
-          // Si no, buscar el chat basado en los usuarios involucrados
-          const chat = chats.find(c => 
-            (c.user1_username === data.usernameSender && c.user2_username === currentUser.username) ||
-            (c.user2_username === data.usernameSender && c.user1_username === currentUser.username) ||
-            (c.user1_username === currentUser.username && c.user2_username === data.usernameReceiver) ||
-            (c.user2_username === currentUser.username && c.user1_username === data.usernameReceiver)
-          );
-          if (chat) {
-            messageChatId = chat.id;
-          }
-        }
-        
-        // Si estamos en el chat activo, mostrar el mensaje
-        if (activeChat && messageChatId && activeChat.id === messageChatId) {
-          // Determinar si es mensaje saliente o entrante
-          const isOutgoing = data.usernameSender === currentUser.username;
-          // Usar la fecha del servidor en lugar de la fecha actual
-          addMessage(data.usernameSender, data.message, new Date(data.date), isOutgoing);
-        } else if (messageChatId && data.usernameSender !== currentUser.username) {
-          // Solo mostrar notificaciones para mensajes de otros usuarios y cuando no estamos en el chat
-          if (!unreadMessages[messageChatId]) {
-            unreadMessages[messageChatId] = 0;
-          }
-          unreadMessages[messageChatId]++;
-          
-          // Actualizar el badge en la lista de chats
-          updateUnreadBadge(messageChatId);
-          
-          // Mostrar notificación solo si no estamos en el chat activo
-          showNotification(`Nuevo mensaje de ${data.usernameSender}: ${data.message}`, 'message');
-          
-          // Reproducir sonido de notificación
-          notificationSound.play().catch(e => console.log('Error al reproducir sonido:', e));
+      socket.on('sendMessageChat', (data) => {
+        console.log('Mensaje de chat recibido:', data);
+        handleIncomingChatMessage(data);
+      });
+
+      socket.on('typingChat', (data) => {
+        console.log('Evento typing chat recibido:', data);
+        handleTypingChat(data);
+      });
+
+      // Eventos de grupos
+      socket.on('allGroups', (data) => {
+        console.log('Grupos recibidos:', data);
+        groups = Array.isArray(data) ? data : (data ? [data] : []);
+        if (currentView === 'groups') {
+          renderGroupList(groups);
         }
       });
 
-      // Evento para cuando alguien está escribiendo
-      socket.on('typing', (data) => {
-        console.log('Evento typing recibido:', data);
-        
-        // Manejar diferentes formatos de datos
-        let username = null;
-        let chatId = null;
-        
-        if (typeof data === 'string') {
-          // Si viene como string "username está escribiendo"
-          if (data.includes(' está escribiendo')) {
-            username = data.split(' está escribiendo')[0];
-          } else {
-            username = data;
-          }
-        } else if (data && typeof data === 'object') {
-          // Si viene como objeto
-          username = data.username || data.user || data.sender;
-          chatId = data.chatId || data.chat_id;
-        }
-        
-        console.log('Username extraído:', username);
-        console.log('ChatId extraído:', chatId);
-        
-        // Si no tenemos chatId, buscar el chat basándose en el username
-        if (username && !chatId) {
-          const chat = chats.find(c => 
-            (c.user1_username === username || c.user2_username === username) && 
-            (c.user1_username === currentUser.username || c.user2_username === currentUser.username)
-          );
-          if (chat) {
-            chatId = chat.id;
-          }
-        }
-        
-        console.log('Chat encontrado:', chatId);
-        
-        // Solo mostrar si tenemos datos válidos y no es el usuario actual
-        if (username && chatId && username !== currentUser.username) {
-          console.log('Mostrando indicador de typing para:', username, 'en chat:', chatId);
-          
-          // Mostrar indicador en la barra lateral
-          showTypingIndicatorSidebar(chatId, username);
-          
-          // Si estamos en el chat activo, mostrar también el indicador principal
-          if (activeChat && activeChat.id == chatId) {
-            typingIndicator.textContent = `${username} está escribiendo...`;
-            showTypingIndicator();
-          }
-        }
+      socket.on('messagesGroup', (messages) => {
+        console.log('Mensajes de grupo recibidos:', messages);
+        renderMessages(messages, 'group');
       });
 
-      socket.on('connect_error', (error) => {
-        console.error('Error de conexión WebSocket:', error);
-        addSystemMessage('Error de conexión al chat');
+      socket.on('createGroup', (newGroup) => {
+        console.log('Nuevo grupo creado:', newGroup);
+        showNotification('Grupo creado correctamente', 'success');
+        // Actualizar la lista de grupos
+        socket.emit('allGroups');
+      });
+
+      socket.on('sendMessageGroup', (data) => {
+        console.log('Mensaje de grupo recibido:', data);
+        handleIncomingGroupMessage(data, 'sendMessageGroup');
+      });
+
+      socket.on('typingGroup', (data) => {
+        console.log('Evento typing grupo recibido:', data);
+        handleTypingGroup(data);
+      });
+
+      socket.on('inviteGroup', (data) => {
+        console.log('Invitación a grupo recibida:', data);
+        
+        // Mostrar notificación
+        showNotification('Has sido invitado a un grupo', 'info');
+        
+        // Actualizar la lista de grupos inmediatamente
+        socket.emit('allGroups');
+        
+        // Si estamos en la vista de grupos, actualizar la interfaz
+        if (currentView === 'groups') {
+          setTimeout(() => {
+            socket.emit('allGroups');
+          }, 1000);
+        }
       });
 
       socket.on('error_message', (err) => {
         console.error('Error del servidor:', err);
         // Solo mostrar notificación si es un error real, no eventos de typing
         if (err && err.message && !err.message.includes('escribiendo')) {
+          // Mostrar el mensaje de error específico del servidor
           showNotification(err.message || 'Error en el servidor', 'error');
+          
+          // Si estamos en un grupo y hay un error, volver a la lista de grupos
+          if (currentView === 'groups' && activeGroup) {
+            switchView('groups');
+          }
+          
+          // Mostrar error en el modal correspondiente si está abierto
+          if (newChatModal.style.display === 'flex') {
+            showError(newChatErrorMessage, err.message || 'Error al crear el chat');
+          } else if (newGroupModal.style.display === 'flex') {
+            showError(newGroupErrorMessage, err.message || 'Error al crear el grupo');
+          } else if (inviteUsersModal.style.display === 'flex') {
+            showError(inviteUsersErrorMessage, err.message || 'Error al invitar usuarios');
+          }
         }
+      });
+
+      // NUEVO: Escuchar todos los eventos para debug
+      socket.onAny((eventName, ...args) => {
+        console.log(`Evento recibido: ${eventName}`, args);
       });
     }
 
-    function updateUnreadBadge(chatId) {
-      const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+    function generateMessageId(data) {
+      // Crear un ID único basado en los datos del mensaje
+      const sender = data.usernameSender || data.username || data.sender || 'unknown';
+      const message = data.message || data.content || data.text || '';
+      const timestamp = data.date || data.created_at || data.timestamp || Date.now();
+      
+      return `${sender}_${message}_${timestamp}`;
+    }
+
+    function handleIncomingChatMessage(data) {
+      console.log('Procesando mensaje de chat:', data);
+      
+      // Determinar si es mensaje saliente o entrante
+      const isOutgoing = data.usernameSender === currentUser.username;
+      const senderName = data.usernameSender || 'Usuario desconocido';
+      
+      console.log('Mensaje de chat - Remitente:', senderName, 'Es propio:', isOutgoing);
+      
+      // IMPORTANTE: Si es nuestro propio mensaje, NO lo mostramos porque ya lo mostramos al enviarlo
+      if (isOutgoing) {
+        console.log('Mensaje propio ignorado para evitar duplicación');
+        return;
+      }
+      
+      // Generar ID único para este mensaje
+      const messageId = generateMessageId(data);
+      
+      // Si ya procesamos este mensaje, ignorarlo
+      if (processedMessages.has(messageId)) {
+        console.log('Mensaje duplicado ignorado:', messageId);
+        return;
+      }
+      
+      // Marcar como procesado
+      processedMessages.add(messageId);
+      
+      // Buscar el chat correspondiente para obtener el chatId
+      let messageChatId = null;
+      
+      // Si tenemos el chatId en los datos, usarlo
+      if (data.chatId) {
+        messageChatId = data.chatId;
+      } else {
+        // Si no, buscar el chat basado en los usuarios involucrados
+        const chat = chats.find(c => 
+          (c.user1_username === data.usernameSender && c.user2_username === currentUser.username) ||
+          (c.user2_username === data.usernameSender && c.user1_username === currentUser.username) ||
+          (c.user1_username === currentUser.username && c.user2_username === data.usernameReceiver) ||
+          (c.user2_username === currentUser.username && c.user1_username === data.usernameReceiver)
+        );
+        if (chat) {
+          messageChatId = chat.id;
+        }
+      }
+      
+      // Si estamos en el chat activo, mostrar el mensaje
+      if (activeChat && messageChatId && activeChat.id === messageChatId && currentView === 'chats') {
+        // Mostrar el mensaje con el nombre correcto del remitente
+        addMessage(senderName, data.message, new Date(data.date), false, 'chat');
+      } else if (messageChatId) {
+        // Solo mostrar notificaciones para mensajes de otros usuarios y cuando no estamos en el chat
+        if (!unreadMessages[messageChatId]) {
+          unreadMessages[messageChatId] = 0;
+        }
+        unreadMessages[messageChatId]++;
+        
+        // Actualizar el badge en la lista de chats
+        updateUnreadBadge(messageChatId, 'chat');
+        
+        // Mostrar notificación en la aplicación
+        showNotification(`Nuevo mensaje de ${senderName}: ${data.message}`, 'message');
+        
+        // Mostrar notificación del navegador si tenemos permisos
+        if (Notification.permission === 'granted') {
+          try {
+            const notification = new Notification(`Nuevo mensaje de ${senderName}`, {
+              body: data.message,
+              icon: '/favicon.ico', // Puedes cambiar esto por un icono personalizado
+              tag: `chat-${messageChatId}`, // Para reemplazar notificaciones del mismo chat
+              requireInteraction: false,
+              silent: false
+            });
+            
+            // Auto-cerrar la notificación después de 5 segundos
+            setTimeout(() => {
+              notification.close();
+            }, 5000);
+            
+            // Hacer clic en la notificación para enfocar la ventana y abrir el chat
+            notification.onclick = function() {
+              window.focus();
+              
+              // Cambiar a la vista de chats si no estamos ahí
+              if (currentView !== 'chats') {
+                switchView('chats');
+              }
+              
+              // Buscar y hacer clic en el chat correspondiente
+              setTimeout(() => {
+                const chatElement = document.querySelector(`[data-chat-id="${messageChatId}"]`);
+                if (chatElement) {
+                  chatElement.click();
+                }
+              }, 100);
+              
+              notification.close();
+            };
+            
+          } catch (error) {
+            console.error('Error al mostrar notificación del navegador:', error);
+          }
+        } else if (Notification.permission === 'default') {
+          // Si no hemos pedido permisos, pedirlos ahora
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              console.log('Permisos de notificación concedidos');
+            }
+          });
+        }
+        
+        // Reproducir sonido de notificación
+        notificationSound.play().catch(e => console.log('Error al reproducir sonido:', e));
+      }
+      
+      // Limpiar mensajes procesados después de un tiempo para evitar que crezca demasiado
+      setTimeout(() => {
+        processedMessages.delete(messageId);
+      }, 60000); // 1 minuto
+    }
+
+    function handleIncomingGroupMessage(data, eventName = 'unknown') {
+      console.log(`Procesando mensaje de grupo (evento ${eventName}):`, data);
+      
+      // Extraer información del mensaje según diferentes formatos posibles
+      let groupId = data.groupId || data.group_id || data.id;
+      let senderName = data.usernameSender || data.username || data.user || data.sender || 'Usuario desconocido';
+      let message = data.message || data.content || data.text;
+      let messageDate = data.date || data.created_at || data.timestamp || new Date();
+      
+      // Si no tenemos groupId pero tenemos un grupo activo, usar ese
+      if (!groupId && activeGroup) {
+        groupId = activeGroup.id;
+        console.log('Usando ID del grupo activo:', groupId);
+      }
+      
+      // Si no tenemos mensaje, ignorar
+      if (!message) {
+        console.log('Mensaje sin contenido ignorado');
+        return;
+      }
+      
+      // Determinar si es mensaje saliente o entrante
+      const isOutgoing = senderName === currentUser.username;
+      
+      console.log('Mensaje de grupo - Remitente:', senderName, 'Es propio:', isOutgoing);
+      console.log('Datos extraídos:', { groupId, senderName, message, activeGroupId: activeGroup?.id, currentView });
+      
+      // IMPORTANTE: Si es nuestro propio mensaje, NO lo mostramos porque ya lo mostramos al enviarlo
+      if (isOutgoing) {
+        console.log('Mensaje propio ignorado para evitar duplicación');
+        return;
+      }
+      
+      // Generar ID único para este mensaje
+      const messageId = `${eventName}_${senderName}_${message}_${groupId}_${messageDate}`;
+      
+      // Si ya procesamos este mensaje, ignorarlo
+      if (processedMessages.has(messageId)) {
+        console.log('Mensaje duplicado ignorado:', messageId);
+        return;
+      }
+      
+      // Marcar como procesado
+      processedMessages.add(messageId);
+      
+      // Buscar el nombre del grupo para las notificaciones
+      const group = groups.find(g => g.id == groupId);
+      const groupName = group ? group.name : 'Grupo desconocido';
+      
+      // Verificar si estamos en el grupo activo Y en la vista de grupos
+      const isInActiveGroup = activeGroup && groupId && activeGroup.id == groupId && currentView === 'groups';
+      
+      console.log('¿Estamos en el grupo activo?', isInActiveGroup, {
+        activeGroup: activeGroup?.id,
+        messageGroupId: groupId,
+        currentView,
+        comparison: activeGroup?.id == groupId
+      });
+      
+      if (isInActiveGroup) {
+        console.log('Mostrando mensaje en grupo activo de:', senderName);
+        
+        // Mostrar el mensaje con el nombre correcto del remitente
+        addMessage(senderName, message, new Date(messageDate), false, 'group');
+      } else if (groupId) {
+        // Solo mostrar notificaciones para mensajes de otros usuarios y cuando no estamos en el grupo
+        console.log('Mensaje de grupo para notificación:', groupId, senderName, 'Grupo:', groupName);
+        
+        if (!unreadGroupMessages[groupId]) {
+          unreadGroupMessages[groupId] = 0;
+        }
+        unreadGroupMessages[groupId]++;
+        
+        // Actualizar el badge en la lista de grupos
+        updateUnreadBadge(groupId, 'group');
+        
+        // Mostrar notificación en la aplicación
+        showNotification(`Nuevo mensaje en ${groupName} de ${senderName}: ${message}`, 'message');
+        
+        // Mostrar notificación del navegador si tenemos permisos
+        if (Notification.permission === 'granted') {
+          try {
+            console.log('Creando notificación del navegador para grupo:', groupName);
+            const notification = new Notification(`Nuevo mensaje en ${groupName}`, {
+              body: `${senderName}: ${message}`,
+              icon: '/favicon.ico', // Puedes cambiar esto por un icono personalizado
+              tag: `group-${groupId}`, // Para reemplazar notificaciones del mismo grupo
+              requireInteraction: false,
+              silent: false
+            });
+            
+            // Auto-cerrar la notificación después de 5 segundos
+            setTimeout(() => {
+              notification.close();
+            }, 5000);
+            
+            // Hacer clic en la notificación para enfocar la ventana y abrir el grupo
+            notification.onclick = function() {
+              window.focus();
+              
+              // Cambiar a la vista de grupos si no estamos ahí
+              if (currentView !== 'groups') {
+                switchView('groups');
+              }
+              
+              // Buscar y hacer clic en el grupo correspondiente
+              setTimeout(() => {
+                const groupElement = document.querySelector(`[data-group-id="${groupId}"]`);
+                if (groupElement) {
+                  groupElement.click();
+                }
+              }, 100);
+              
+              notification.close();
+            };
+            
+          } catch (error) {
+            console.error('Error al mostrar notificación del navegador:', error);
+          }
+        } else if (Notification.permission === 'default') {
+          // Si no hemos pedido permisos, pedirlos ahora
+          console.log('Solicitando permisos de notificación...');
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              console.log('Permisos de notificación concedidos');
+            }
+          });
+        } else {
+          console.log('Notificaciones del navegador denegadas o no disponibles');
+        }
+        
+        // Reproducir sonido de notificación
+        notificationSound.play().catch(e => console.log('Error al reproducir sonido:', e));
+      }
+      
+      // Limpiar mensajes procesados después de un tiempo para evitar que crezca demasiado
+      setTimeout(() => {
+        processedMessages.delete(messageId);
+      }, 60000); // 1 minuto
+    }
+
+    function handleTypingChat(data) {
+      // Manejar diferentes formatos de datos
+      let username = null;
+      let chatId = null;
+      
+      if (typeof data === 'string') {
+        // Si viene como string "username está escribiendo"
+        if (data.includes(' esta escribiendo')) {
+          username = data.split(' esta escribiendo')[0];
+        } else {
+          username = data;
+        }
+      } else if (data && typeof data === 'object') {
+        // Si viene como objeto
+        username = data.username || data.user || data.sender;
+        chatId = data.chatId || data.chat_id;
+      }
+      
+      // Si no tenemos chatId, buscar el chat basándose en el username
+      if (username && !chatId) {
+        const chat = chats.find(c => 
+          (c.user1_username === username || c.user2_username === username) && 
+          (c.user1_username === currentUser.username || c.user2_username === currentUser.username)
+        );
+        if (chat) {
+          chatId = chat.id;
+        }
+      }
+      
+      // Solo mostrar si tenemos datos válidos y no es el usuario actual
+      if (username && chatId && username !== currentUser.username) {
+        // Mostrar indicador en la barra lateral
+        showTypingIndicatorSidebar(chatId, username, 'chat');
+        
+        // Si estamos en el chat activo, mostrar también el indicador principal
+        if (activeChat && activeChat.id == chatId && currentView === 'chats') {
+          typingIndicator.textContent = `${username} está escribiendo...`;
+          showTypingIndicator();
+        }
+      }
+    }
+
+    function handleTypingGroup(data) {
+      let username = null;
+      
+      if (typeof data === 'string') {
+        if (data.includes(' esta escribiendo')) {
+          username = data.split(' esta escribiendo')[0];
+        } else {
+          username = data;
+        }
+      } else if (data && typeof data === 'object') {
+        username = data.username || data.user || data.sender;
+      }
+      
+      // Solo mostrar si tenemos datos válidos y no es el usuario actual
+      if (username && username !== currentUser.username) {
+        // Si estamos en el grupo activo, mostrar el indicador principal
+        if (activeGroup && currentView === 'groups') {
+          typingIndicator.textContent = `${username} está escribiendo...`;
+          showTypingIndicator();
+        }
+      }
+    }
+
+    function updateUnreadBadge(id, type) {
+      const selector = type === 'chat' ? `.chat-item[data-chat-id="${id}"]` : `.chat-item[data-group-id="${id}"]`;
+      const chatItem = document.querySelector(selector);
       if (chatItem) {
         // Eliminar badge existente si hay
         const existingBadge = chatItem.querySelector('.chat-notification-badge');
@@ -912,46 +1617,43 @@
         }
         
         // Si hay mensajes no leídos, mostrar badge
-        if (unreadMessages[chatId] && unreadMessages[chatId] > 0) {
+        const unreadCount = type === 'chat' ? unreadMessages[id] : unreadGroupMessages[id];
+        if (unreadCount && unreadCount > 0) {
           const badge = document.createElement('div');
           badge.className = 'chat-notification-badge';
-          badge.textContent = unreadMessages[chatId];
+          badge.textContent = unreadCount;
           chatItem.appendChild(badge);
         }
       }
     }
 
-    function showTypingIndicatorSidebar(chatId, username) {
-      console.log('Intentando mostrar indicador sidebar para chat:', chatId);
-      const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
-      console.log('Chat item encontrado:', chatItem);
+    function showTypingIndicatorSidebar(id, username, type) {
+      const selector = type === 'chat' ? `.chat-item[data-chat-id="${id}"]` : `.chat-item[data-group-id="${id}"]`;
+      const chatItem = document.querySelector(selector);
       
       if (chatItem) {
         let typingIndicator = chatItem.querySelector('.typing-indicator-sidebar');
-        console.log('Typing indicator encontrado:', typingIndicator);
         
         if (typingIndicator) {
           typingIndicator.textContent = 'escribiendo...';
           typingIndicator.style.display = 'inline';
-          console.log('Indicador mostrado');
           
           // Limpiar timeout anterior si existe
-          if (typingUsers[chatId]) {
-            clearTimeout(typingUsers[chatId]);
+          const key = `${type}_${id}`;
+          if (typingUsers[key]) {
+            clearTimeout(typingUsers[key]);
           }
           
           // Ocultar después de 3 segundos
-          typingUsers[chatId] = setTimeout(() => {
+          typingUsers[key] = setTimeout(() => {
             typingIndicator.style.display = 'none';
-            delete typingUsers[chatId];
-            console.log('Indicador ocultado');
+            delete typingUsers[key];
           }, 3000);
         }
       }
     }
 
     function showTypingIndicator() {
-      console.log('Mostrando indicador principal');
       typingIndicator.style.display = 'block';
       
       // Limpiar el timeout anterior si existe
@@ -962,14 +1664,63 @@
       // Ocultar el indicador después de 3 segundos
       typingTimeout = setTimeout(() => {
         typingIndicator.style.display = 'none';
-        console.log('Indicador principal ocultado');
       }, 3000);
+    }
+
+    function switchView(view) {
+      currentView = view;
+      
+      // Actualizar tabs
+      chatsTab.classList.toggle('active', view === 'chats');
+      groupsTab.classList.toggle('active', view === 'groups');
+      
+      // Actualizar título y botón
+      if (view === 'chats') {
+        listTitle.textContent = 'Mis Chats';
+        newChatBtn.textContent = 'Nuevo Chat';
+        newChatBtn.onclick = () => {
+          hideError(newChatErrorMessage);
+          newChatModal.style.display = 'flex';
+        };
+        renderChatList(chats);
+      } else {
+        listTitle.textContent = 'Mis Grupos';
+        newChatBtn.textContent = 'Nuevo Grupo';
+        newChatBtn.onclick = () => {
+          hideError(newGroupErrorMessage);
+          newGroupModal.style.display = 'flex';
+        };
+        renderGroupList(groups);
+      }
+      
+      // Si había un grupo activo, salir automáticamente ANTES de limpiar las variables
+      if (activeGroup && socket) {
+        console.log('Saliendo automáticamente del grupo:', activeGroup.id);
+        socket.emit('leaveGroupForMoment');
+      }
+      
+      // Limpiar chat activo DESPUÉS de usar las variables
+      activeChat = null;
+      activeGroup = null;
+      
+      chatMessages.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">👋</div>
+          <p>Selecciona un ${view === 'chats' ? 'chat' : 'grupo'} para ver los mensajes</p>
+          <p>o crea uno nuevo para comenzar a chatear</p>
+        </div>
+      `;
+      chatInfoHeader.classList.remove('show');
+      
+      // Deshabilitar input
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
     }
 
     function renderChatList(chatData) {
       chatList.innerHTML = '';
       
-      if (!chatData || (Array.isArray(chatData) && chatData.length === 0) || chatData.message) {
+      if (!chatData || chatData.length === 0) {
         chatList.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">💬</div>
@@ -980,9 +1731,7 @@
         return;
       }
       
-      chats = Array.isArray(chatData) ? chatData : [chatData];
-      
-      chats.forEach(chat => {
+      chatData.forEach(chat => {
         const chatItem = document.createElement('div');
         chatItem.className = 'chat-item';
         chatItem.dataset.chatId = chat.id;
@@ -1012,25 +1761,128 @@
         }
         
         chatItem.addEventListener('click', () => {
+          // Si había un grupo activo, salir automáticamente ANTES de limpiar
+          if (activeGroup && socket) {
+            console.log('Saliendo automáticamente del grupo al cambiar a chat:', activeGroup.id);
+            socket.emit('leaveGroupForMoment');
+          }
+          
           document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
           chatItem.classList.add('active');
           activeChat = chat;
+          activeGroup = null;
           
           // Marcar mensajes como leídos
           if (unreadMessages[chat.id]) {
             unreadMessages[chat.id] = 0;
-            updateUnreadBadge(chat.id);
+            updateUnreadBadge(chat.id, 'chat');
           }
+          
+          // Mostrar información del chat
+          chatInfoTitle.textContent = `Chat con ${otherUser}`;
+          chatInfoSubtitle.textContent = 'Chat privado';
+          chatInfoHeader.classList.add('show');
+          groupActions.style.display = 'none';
           
           socket.emit('joinChat', chat.id, 50, 0);
           chatMessages.innerHTML = '';
+          
+          // Habilitar input
+          messageInput.disabled = false;
+          sendBtn.disabled = false;
         });
         
         chatList.appendChild(chatItem);
       });
     }
 
-    function renderMessages(messages) {
+    function renderGroupList(groupData) {
+      chatList.innerHTML = '';
+      
+      if (!groupData || groupData.length === 0) {
+        chatList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <p>No tienes grupos activos</p>
+            <p>Crea un nuevo grupo para comenzar</p>
+          </div>
+        `;
+        return;
+      }
+      
+      groupData.forEach(group => {
+        const groupItem = document.createElement('div');
+        groupItem.className = 'chat-item';
+        groupItem.dataset.groupId = group.id;
+        
+        if (activeGroup && activeGroup.id === group.id) {
+          groupItem.classList.add('active');
+        }
+        
+        groupItem.innerHTML = `
+          <div class="chat-item-name">
+            ${group.name}
+            <span class="group-badge">Grupo</span>
+            <span class="typing-indicator-sidebar"></span>
+          </div>
+          <div class="chat-item-preview">Grupo con múltiples usuarios</div>
+        `;
+        
+        // Añadir badge de notificación si hay mensajes no leídos
+        if (unreadGroupMessages[group.id] && unreadGroupMessages[group.id] > 0) {
+          const badge = document.createElement('div');
+          badge.className = 'chat-notification-badge';
+          badge.textContent = unreadGroupMessages[group.id];
+          groupItem.appendChild(badge);
+        }
+        
+        groupItem.addEventListener('click', () => {
+          // Si había un grupo activo diferente, salir automáticamente
+          if (activeGroup && activeGroup.id !== group.id && socket) {
+            console.log('Saliendo automáticamente del grupo anterior:', activeGroup.id);
+            socket.emit('leaveGroupForMoment');
+          }
+          document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+          groupItem.classList.add('active');
+          activeGroup = group;
+          activeChat = null;
+          
+          // Marcar mensajes como leídos
+          if (unreadGroupMessages[group.id]) {
+            unreadGroupMessages[group.id] = 0;
+            updateUnreadBadge(group.id, 'group');
+          }
+          
+          // Mostrar información del grupo
+          chatInfoTitle.textContent = group.name;
+          chatInfoSubtitle.textContent = 'Grupo';
+          chatInfoHeader.classList.add('show');
+          groupActions.style.display = 'flex';
+          
+          console.log('Intentando unirse al grupo:', group.id);
+          console.log('Datos del grupo activo:', activeGroup);
+          
+          // Limpiar mensajes procesados para este grupo
+          Array.from(processedMessages).forEach(id => {
+            if (id.includes(`_${group.id}_`)) {
+              processedMessages.delete(id);
+            }
+          });
+          
+          // Enviar con los parámetros que espera el servidor: groupId, limit, offset
+          socket.emit('joinGroup', group.id, 50, 0);
+          chatMessages.innerHTML = '';
+          
+          // Habilitar input
+          messageInput.disabled = false;
+          sendBtn.disabled = false;
+        });
+        
+        chatList.appendChild(groupItem);
+      });
+    }
+
+    function renderMessages(messages, type) {
       // Limpiar mensajes anteriores excepto el mensaje del sistema
       const systemMessages = Array.from(chatMessages.querySelectorAll('.message')).filter(
         msg => msg.classList.contains('system-message')
@@ -1038,18 +1890,26 @@
       chatMessages.innerHTML = '';
       systemMessages.forEach(msg => chatMessages.appendChild(msg));
       
-      if (!messages || messages.message) {
-        addSystemMessage(messages?.message || 'No hay mensajes en este chat');
+      if (!messages || messages.length === 0) {
+        addSystemMessage(`No hay mensajes en este ${type === 'chat' ? 'chat' : 'grupo'}`);
         return;
       }
       
       messages.forEach(msg => {
-        const isOutgoing = msg.sender === currentUser.id;
+        const isOutgoing = type === 'chat' ? 
+          msg.sender === currentUser.id :
+          msg.sender === currentUser.id;
+        
+        const senderName = type === 'chat' ? 
+          (isOutgoing ? currentUser.username : msg.sender_username) :
+          (isOutgoing ? currentUser.username : msg.username);
+        
         addMessage(
-          isOutgoing ? currentUser.username : msg.sender_username,
+          senderName,
           msg.message,
           new Date(msg.created_at || Date.now()),
-          isOutgoing
+          isOutgoing,
+          type
         );
       });
       
@@ -1083,9 +1943,16 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function addMessage(user, message, date, isOutgoing = false) {
+    function addMessage(user, message, date, isOutgoing = false, type = 'chat') {
       const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
+      
+      if (type === 'group') {
+        // Para grupos, aplicar clases según si es del usuario actual o no
+        messageDiv.className = `message message-group ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
+      } else {
+        // Para chats individuales, mensajes del usuario van a la derecha (outgoing)
+        messageDiv.className = `message ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
+      }
       
       const timeString = date.toLocaleTimeString('es-ES', {
         hour: '2-digit',
@@ -1093,7 +1960,7 @@
       });
       
       messageDiv.innerHTML = `
-        <div class="message-header">${user}</div>
+        <div class="message-header">${user || 'Usuario desconocido'}</div>
         <div class="message-content">${message}</div>
         <div class="message-time">${timeString}</div>
       `;
@@ -1110,20 +1977,30 @@
 
     function sendMessage() {
       const message = messageInput.value.trim();
-      if (message && socket && currentUser && activeChat) {
-        // Determinar el destinatario (el otro usuario en el chat)
-        const receiverUsername = activeChat.user1 === currentUser.id ? 
-          activeChat.user2_username : activeChat.user1_username;
-        
-        socket.emit('sendMessage', message, activeChat.id, receiverUsername);
-        
-        // Agregar mensaje inmediatamente para el usuario que envía (con hora actual como placeholder)
-        // Este mensaje se actualizará cuando llegue la respuesta del servidor con la hora correcta
-        addMessage(currentUser.username, message, new Date(), true);
+      if (message && socket && currentUser) {
+        if (currentView === 'chats' && activeChat) {
+          // Enviar mensaje de chat
+          const receiverUsername = activeChat.user1 === currentUser.id ? 
+            activeChat.user2_username : activeChat.user1_username;
+          
+          console.log('Enviando mensaje de chat:', message);
+          socket.emit('sendMessageChat', message, activeChat.id, receiverUsername);
+          
+          // Agregar mensaje inmediatamente para mostrar feedback visual
+          addMessage(currentUser.username, message, new Date(), true, 'chat');
+          
+        } else if (currentView === 'groups' && activeGroup) {
+          // Enviar mensaje de grupo
+          console.log('Enviando mensaje de grupo:', activeGroup.id, message, currentUser.id);
+          socket.emit('sendMessageGroup', activeGroup.id, message, currentUser.id);
+          
+          // Agregar mensaje inmediatamente para mostrar feedback visual
+          addMessage(currentUser.username, message, new Date(), true, 'group');
+        }
         
         messageInput.value = '';
-      } else if (!activeChat) {
-        showNotification('Selecciona un chat primero', 'error');
+      } else if (!activeChat && !activeGroup) {
+        showNotification(`Selecciona un ${currentView === 'chats' ? 'chat' : 'grupo'} primero`, 'error');
       }
     }
 
@@ -1134,6 +2011,8 @@
       const data = Object.fromEntries(formData.entries());
 
       try {
+        hideError(regErrorMessage);
+        
         const response = await fetch(`${API_BASE}/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1141,17 +2020,17 @@
           credentials: 'include'
         });
 
+        const result = await response.json();
+        
         if (response.ok) {
-          const result = await response.json();
           showNotification('Registro exitoso. Ahora puedes iniciar sesión.', 'success');
           registerForm.reset();
         } else {
-          const error = await response.json();
-          showNotification(error.message || 'Error en el registro', 'error');
+          showError(regErrorMessage, result.message || 'Error en el registro');
         }
       } catch (error) {
         console.error('Error en registro:', error);
-        showNotification('Error de conexión. Intenta de nuevo.', 'error');
+        showError(regErrorMessage, 'Error de conexión. Intenta de nuevo.');
       }
     });
 
@@ -1161,6 +2040,8 @@
       const data = Object.fromEntries(formData.entries());
 
       try {
+        hideError(loginErrorMessage);
+        
         const response = await fetch(`${API_BASE}/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1168,18 +2049,18 @@
           credentials: 'include'
         });
 
+        const result = await response.json();
+        
         if (response.ok) {
-          const userData = await response.json();
-          showNotification(`¡Bienvenido, ${userData.username}!`, 'success');
-          showChat(userData);
+          showNotification(`¡Bienvenido, ${result.username}!`, 'success');
+          showChat(result);
           loginForm.reset();
         } else {
-          const error = await response.json();
-          showNotification(error.message || 'Credenciales incorrectas', 'error');
+          showError(loginErrorMessage, result.message || 'Credenciales incorrectas');
         }
       } catch (error) {
         console.error('Error en login:', error);
-        showNotification('Error de conexión. Intenta de nuevo.', 'error');
+        showError(loginErrorMessage, 'Error de conexión. Intenta de nuevo.');
       }
     });
 
@@ -1197,22 +2078,30 @@
       }
     });
 
+    // Event listeners para tabs
+    chatsTab.addEventListener('click', () => switchView('chats'));
+    groupsTab.addEventListener('click', () => switchView('groups'));
+
     let typingDebounce = null;
 
     messageInput.addEventListener('input', () => {
       // Emitir evento de "escribiendo" solo cuando hay texto
-      if (socket && messageInput.value.length > 0 && activeChat) {
+      if (socket && messageInput.value.length > 0) {
         // Limpiar el debounce anterior
         if (typingDebounce) {
           clearTimeout(typingDebounce);
         }
         
-        // Enviar el evento de typing con el nombre del destinatario
-        const receiverUsername = activeChat.user1 === currentUser.id ? 
-          activeChat.user2_username : activeChat.user1_username;
-        
-        console.log('Enviando evento typing a:', receiverUsername);
-        socket.emit('typing', receiverUsername);
+        if (currentView === 'chats' && activeChat) {
+          // Enviar el evento de typing con el nombre del destinatario
+          const receiverUsername = activeChat.user1 === currentUser.id ? 
+            activeChat.user2_username : activeChat.user1_username;
+          
+          socket.emit('typingChat', receiverUsername);
+        } else if (currentView === 'groups' && activeGroup) {
+          // Enviar evento de typing para grupo
+          socket.emit('typingGroup');
+        }
         
         // Configurar debounce para dejar de enviar eventos después de 1 segundo sin escribir
         typingDebounce = setTimeout(() => {
@@ -1229,29 +2118,22 @@
 
     sendBtn.addEventListener('click', sendMessage);
 
-    newChatBtn.addEventListener('click', () => {
-      newChatModal.style.display = 'flex';
-    });
-
+    // Event listeners para modales de chat
     closeModalBtn.addEventListener('click', () => {
       newChatModal.style.display = 'none';
     });
 
-    window.addEventListener('click', (e) => {
-      if (e.target === newChatModal) {
-        newChatModal.style.display = 'none';
-      }
-    });
-
     newChatForm.addEventListener('submit', (e) => {
       e.preventDefault();
-  
+
       const receiverUsername = document.getElementById('receiverUsername').value.trim();
       
       if (!receiverUsername) {
-        showNotification('Por favor completa todos los campos', 'error');
+        showError(newChatErrorMessage, 'Por favor completa todos los campos');
         return;
       }
+      
+      hideError(newChatErrorMessage);
       
       if (socket && currentUser) {
         // El nombre del chat será automáticamente el nombre del destinatario
@@ -1266,6 +2148,79 @@
       }
     });
 
+    // Event listeners para modales de grupo
+    closeGroupModalBtn.addEventListener('click', () => {
+      newGroupModal.style.display = 'none';
+    });
+
+    newGroupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const groupName = document.getElementById('groupName').value.trim();
+      
+      if (!groupName) {
+        showError(newGroupErrorMessage, 'Por favor ingresa un nombre para el grupo');
+        return;
+      }
+      
+      hideError(newGroupErrorMessage);
+      
+      if (socket && currentUser) {
+        socket.emit('createGroup', groupName);
+        newGroupForm.reset();
+        newGroupModal.style.display = 'none';
+      }
+    });
+
+    // Event listeners para invitar usuarios
+    inviteUsersBtn.addEventListener('click', () => {
+      if (activeGroup) {
+        hideError(inviteUsersErrorMessage);
+        inviteUsersModal.style.display = 'flex';
+      }
+    });
+
+    closeInviteModalBtn.addEventListener('click', () => {
+      inviteUsersModal.style.display = 'none';
+    });
+
+    inviteUsersForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const usersToInvite = document.getElementById('usersToInvite').value.trim();
+      
+      if (!usersToInvite) {
+        showError(inviteUsersErrorMessage, 'Por favor ingresa al menos un usuario');
+        return;
+      }
+      
+      hideError(inviteUsersErrorMessage);
+      
+      // Convertir la lista de usuarios separados por comas en un array
+      const usersList = usersToInvite.split(',').map(user => user.trim()).filter(user => user);
+      
+      if (socket && currentUser && activeGroup && usersList.length > 0) {
+        // Enviar el array completo de usuarios según el socket.js: (usersList, groupId)
+        socket.emit('inviteGroup', usersList, activeGroup.id);
+        inviteUsersForm.reset();
+        showNotification(`Invitaciones enviadas a ${usersList.length} usuario(s)`, 'success');
+        // NO cerrar el grupo ni cambiar la vista - mantener el grupo activo
+      }
+    });
+
+    // Event listeners para cerrar modales al hacer clic fuera
+    window.addEventListener('click', (e) => {
+      if (e.target === newChatModal) {
+        newChatModal.style.display = 'none';
+      }
+      if (e.target === newGroupModal) {
+        newGroupModal.style.display = 'none';
+      }
+      if (e.target === inviteUsersModal) {
+        inviteUsersModal.style.display = 'none';
+      }
+    });
+
     // Inicializar aplicación
     window.addEventListener('load', () => {
       showLoading();
@@ -1275,6 +2230,11 @@
 
     // Manejar errores de conexión del WebSocket
     window.addEventListener('beforeunload', () => {
+      // Si hay un grupo activo, salir automáticamente
+      if (activeGroup) {
+        console.log('Saliendo automáticamente del grupo al cerrar página:', activeGroup.id);
+        socket.emit('leaveGroupForMoment');
+      }
       if (socket) {
         socket.disconnect();
       }
@@ -1282,7 +2242,21 @@
 
     // Solicitar permiso para notificaciones
     if ('Notification' in window) {
-      Notification.requestPermission();
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            console.log('Permisos de notificación concedidos');
+            showNotification('Notificaciones del navegador activadas', 'success');
+          } else if (permission === 'denied') {
+            console.log('Permisos de notificación denegados');
+            showNotification('Las notificaciones del navegador están desactivadas', 'info');
+          }
+        });
+      } else if (Notification.permission === 'granted') {
+        console.log('Permisos de notificación ya concedidos');
+      }
+    } else {
+      console.log('Este navegador no soporta notificaciones');
     }
   </script>
 </body>

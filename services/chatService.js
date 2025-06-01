@@ -10,6 +10,20 @@ export const verifyChatExists = async (chatId, userId) => {
     return foundChat
 }
 
+export const verifyGroupExists = async (groupId, userId) => {
+    const group = await pool.query(`SELECT * FROM Groups WHERE id = $1`, [groupId])
+    const foundGroup = group.rows[0]
+    if (!foundGroup) {
+        throw new AppError('El grupo no existe', 404)
+    }
+    const userInGroup = await pool.query(`SELECT * FROM Groups_Users WHERE user_id = $1 AND group_id = $2`, [userId, groupId])
+    const foundUserInGroup = userInGroup.rows[0]
+    if (!foundUserInGroup) {
+        throw new AppError('El usuario no esta en el grupo', 400)
+    }
+    return foundGroup
+}
+
 export const createChat = async (chatData) => {
     try {
         const user2Id = await pool.query(`SELECT * FROM Users WHERE username = $1`, [chatData.user2])
@@ -27,17 +41,17 @@ export const createChat = async (chatData) => {
     }
 }
 
-export const sendMessage = async (data) => {
+export const sendMessageChat = async (data) => {
     try {
         const { message, userId, chatId, usernameReceiver } = data
         if (!message || message.length > 1000) {
-            throw new AppError('El mensaje no es valido', 404)
+            throw new AppError('El mensaje no es valido o es muy largo', 404)
         }
         const userReceiver = await pool.query(`SELECT id FROM Users WHERE username = $1`, [usernameReceiver])
         if (!userReceiver.rows[0]) {
             throw new AppError('El receptor no existe', 404);
         }
-        const newMessage = await pool.query(`INSERT INTO Messages (chat_id, message, sender, receiver) VALUES ($1, $2, $3, $4)`, [chatId, message, userId, userReceiver.rows[0].id])
+        const newMessage = await pool.query(`INSERT INTO Messages_Chats (chat_id, message, sender, receiver) VALUES ($1, $2, $3, $4)`, [chatId, message, userId, userReceiver.rows[0].id])
         return { message }
     } catch (err) {
         throw new AppError('No se pudo enviar el mensaje', 500)
@@ -69,7 +83,7 @@ export const getAllChats = async (userId) => {
 export const getMessagesChat = async (chatId, limit, offset) => {
     const messagesChat = await pool.query(`
         SELECT m.*, u_sender.username as sender_username, u_receiver.username as receiver_username 
-        FROM Messages m 
+        FROM Messages_Chats m 
         JOIN Users u_sender ON m.sender = u_sender.id 
         JOIN Users u_receiver ON m.receiver = u_receiver.id 
         WHERE m.chat_id = $1 
@@ -79,4 +93,75 @@ export const getMessagesChat = async (chatId, limit, offset) => {
         return { message: 'Este chat no tiene mensajes' }
     }
     return messagesChat.rows
+}
+
+export const createGroup = async (nameGroup) => {
+    try {
+        if (!nameGroup || nameGroup.length > 100) {
+            throw new AppError('El nombre del grupo no es valido', 400)
+        }
+        const newGroup = await pool.query(`INSERT INTO Groups (name) VALUES ($1) RETURNING id`, [nameGroup])
+        return { message: 'Grupo creado correctamente', groupId: newGroup.rows[0].id }
+    } catch (err) {
+        throw new AppError('Hubo un error repentino', 500)
+    } 
+}
+
+export const sendMessageGroup = async (data) => {
+    try {
+        const { groupId, message, sender } = data
+        if (!message || message.length > 1000) {
+            throw new AppError('El mensaje no es valido o es muy largo', 404)
+        }
+        const newMessage = await pool.query(`INSERT INTO Messages_Groups (group_id, message, sender) VALUES ($1, $2, $3)`, [groupId, message, sender])
+        return { message }
+    } catch (err) {
+        throw new AppError('Hubo un error repentino', 500)
+    }
+}
+
+export const getAllGroups = async (userId) => {
+    try {
+        const groups = await pool.query(`SELECT g.* FROM Groups_Users gu JOIN Groups g ON gu.group_id = g.id WHERE gu.user_id = $1`, [userId])
+        if (groups.rows.length === 0) {
+            return { message: 'No tienes grupos actualmente' }
+        }
+        return groups.rows
+    } catch (err) {
+        throw new AppError('Hubo un error repentino', 500)
+    }
+}
+
+export const getMessagesGroups = async (groupId, limit, offset) => {
+    const messages = await pool.query(`
+        SELECT m.*, u.username as username FROM Messages_Groups m 
+        JOIN Users u ON m.sender = u.id 
+        WHERE m.group_id = $1 
+        ORDER BY m.send_at ASC
+        LIMIT $2 OFFSET $3`, [groupId, limit, offset])
+    if (messages.rows.length === 0) {
+        return { message: 'El grupo no tiene mensajes aun' }
+    }
+    return messages.rows
+}
+
+export const getUsersOfGroup = async (groupId) => {
+    const users = await pool.query(`SELECT u.username FROM Groups_Users g JOIN Users u ON g.user_id = u.id WHERE group_id = $1`, [groupId])
+    if (users.rows.length === 0) {
+        return { message: 'Este grupo no tiene usuarios' }
+    }
+    return users.rows
+}
+
+export const inviteUsersToGroup = async (userId, groupId) => {
+    try {
+        const userInGroup = await pool.query(`SELECT * FROM Groups_Users WHERE user_id = $1 AND group_id = $2`, [userId, groupId])
+        if (userInGroup.rows[0]) {
+            throw new AppError('El usuario ya esta en el grupo', 409)
+        }
+        const newUserInGroup = await pool.query(`INSERT INTO Groups_Users (user_id, group_id) VALUES ($1, $2)`, [userId, groupId])
+        return { message: 'Usuario agregado correctamente', groupId }
+    } catch (err) {
+        throw new AppError('Hubo un error repentino', 500)
+    }
 }

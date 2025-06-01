@@ -77,3 +77,12 @@ export const getUser = async (id) => {
 
     return foundUser
 }
+
+export const findUserIdByUsername = async (username) => {
+    const user = await pool.query(`SELECT id, username, email FROM Users WHERE username = $1`, [username])
+    const foundUser = user.rows[0]
+    if (!foundUser) {
+        throw new AppError(`El usuario no existe`, 404)
+    }
+    return foundUser
+}

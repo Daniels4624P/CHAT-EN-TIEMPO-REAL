@@ -47,7 +47,7 @@ export const connectDb = async () => {
             END$$;
         `)
 
-        await pool.query(`CREATE TABLE IF NOT EXISTS Messages (
+        await pool.query(`CREATE TABLE IF NOT EXISTS Messages_Chats (
             id SERIAL PRIMARY KEY,
             chat_id INTEGER NOT NULL,
             message TEXT NOT NULL,
@@ -60,6 +60,32 @@ export const connectDb = async () => {
             FOREIGN KEY (receiver) REFERENCES Users(id)
         )`)
         console.log('Se creo la tabla Messages')
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS Groups (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(50) NOT NULL
+        )`)
+        console.log('Se creo la tabla Groups')
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS Messages_Groups (
+            id SERIAL PRIMARY KEY,
+            group_id INTEGER NOT NULL,
+            message TEXT NOT NULL,
+            send_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            sender INTEGER NOT NULL,
+            state_message estado_mensaje NOT NULL DEFAULT 'Enviado',
+            FOREIGN KEY (group_id) REFERENCES Groups(id),
+            FOREIGN KEY (sender) REFERENCES Users(id)
+        )`)
+        console.log('Se creo la tabla Messages_Groups')
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS Groups_Users (
+            user_id INTEGER NOT NULL,
+            group_id INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES Users(id),
+            FOREIGN KEY (group_id) REFERENCES Groups(id)
+        )`)
+        console.log('Se creo la tabla Groups_Users')
     } catch (err) {
         throw new AppError('Algo fallo', 500)
     }
