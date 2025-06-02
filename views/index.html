@@ -813,7 +813,7 @@
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    const API_BASE = 'https://chat-en-tiempo-real-hl51.onrender.com/api/v1/auth';
+    const API_BASE = 'http://localhost:3000/api/v1/auth';
     
     // Elementos del DOM
     const loading = document.getElementById('loading');
@@ -918,22 +918,26 @@
       chatContainer.style.display = 'block';
       
       currentUser = user;
-      userName.textContent = user.username;
-      userEmail.textContent = user.email;
-      userAvatar.textContent = user.username.charAt(0).toUpperCase();
+      userName.textContent = user.username || 'Usuario';
+      userEmail.textContent = user.email || '';
+      userAvatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
       
       // Inicializar WebSocket solo cuando el usuario esté autenticado
       initializeSocket();
     }
 
     function showError(element, message) {
-      element.textContent = message;
-      element.style.display = 'block';
+      if (element && message) {
+        element.textContent = message;
+        element.style.display = 'block';
+      }
     }
 
     function hideError(element) {
-      element.textContent = '';
-      element.style.display = 'none';
+      if (element) {
+        element.textContent = '';
+        element.style.display = 'none';
+      }
     }
 
     function updateConnectionStatus(status) {
@@ -1098,7 +1102,7 @@
       console.log('Inicializando WebSocket...');
       updateConnectionStatus('Conectando...');
       
-      socket = io("https://chat-en-tiempo-real-hl51.onrender.com", { 
+      socket = io("http://localhost:3000", { 
         withCredentials: true,
         reconnection: true,
         reconnectionAttempts: 5,
@@ -1123,17 +1127,25 @@
         socket.emit('allChats');
         socket.emit('allGroups');
         
-        // Habilitar chat cuando esté conectado
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
+        // Forzar actualizaciones periódicas para mantener sincronización
+        setInterval(() => {
+          if (socket && socket.connected) {
+            socket.emit('allChats');
+            socket.emit('allGroups');
+          }
+        }, 30000); // Cada 30 segundos
         
         // Si hay un chat o grupo activo, volver a unirse
         if (activeChat && currentView === 'chats') {
           console.log('Reconectando al chat activo:', activeChat.id);
           socket.emit('joinChat', activeChat.id, 50, 0);
+          messageInput.disabled = false;
+          sendBtn.disabled = false;
         } else if (activeGroup && currentView === 'groups') {
           console.log('Reconectando al grupo activo:', activeGroup.id);
           socket.emit('joinGroup', activeGroup.id, 50, 0);
+          messageInput.disabled = false;
+          sendBtn.disabled = false;
         }
       });
 
@@ -1165,7 +1177,27 @@
       // Eventos de chats individuales
       socket.on('allChats', (data) => {
         console.log('Chats recibidos:', data);
-        chats = Array.isArray(data) ? data : (data ? [data] : []);
+        
+        // Procesar datos de chats con validación básica pero menos restrictiva
+        if (data && Array.isArray(data)) {
+          chats = data.filter(chat => 
+            chat && 
+            chat.id && 
+            chat.user1_username && 
+            chat.user2_username &&
+            chat.user1_username.trim() !== '' &&
+            chat.user2_username.trim() !== '' &&
+            chat.user1_username !== 'undefined' &&
+            chat.user2_username !== 'undefined'
+          );
+        } else if (data && data.id && data.user1_username && data.user2_username) {
+          chats = [data];
+        } else {
+          chats = [];
+        }
+        
+        console.log('Chats procesados:', chats);
+        
         if (currentView === 'chats') {
           renderChatList(chats);
         }
@@ -1173,30 +1205,112 @@
 
       socket.on('messagesChat', (messages) => {
         console.log('Mensajes de chat recibidos:', messages);
-        renderMessages(messages, 'chat');
+        if (messages && Array.isArray(messages)) {
+          renderMessages(messages, 'chat');
+        }
       });
 
       socket.on('createChat', (newChat) => {
         console.log('Nuevo chat creado:', newChat);
-        showNotification('Chat creado correctamente', 'success');
-        // Actualizar la lista de chats
+        if (newChat && newChat.id) {
+          showNotification('Chat creado correctamente', 'success');
+          
+          // Cambiar automáticamente a la vista de chats si no estamos ahí
+          if (currentView !== 'chats') {
+            switchView('chats');
+          }
+          
+          // Actualizar la lista de chats inmediatamente
+          socket.emit('allChats');
+          
+          // Actualizar nuevamente después de un delay para asegurar sincronización
+          setTimeout(() => {
+            socket.emit('allChats');
+          }, 500);
+        }
+      });
+
+      // Nuevo evento para cuando alguien más crea un chat contigo
+      socket.on('newChatCreated', (data) => {
+        console.log('Nuevo chat recibido:', data);
+        
+        // Mostrar notificación
+        showNotification(`Nuevo chat creado con ${data.creatorUsername || 'un usuario'}`, 'info');
+        
+        // Actualizar la lista de chats inmediatamente
         socket.emit('allChats');
+        
+        // Si estamos en la vista de chats, actualizar la interfaz inmediatamente
+        if (currentView === 'chats') {
+          setTimeout(() => {
+            socket.emit('allChats');
+            renderChatList(chats);
+          }, 200);
+        }
+        
+        // Actualizar nuevamente después de un delay más largo para asegurar sincronización
+        setTimeout(() => {
+          socket.emit('allChats');
+          if (currentView === 'chats') {
+            renderChatList(chats);
+          }
+        }, 1000);
+      });
+
+      // Evento para cuando te agregan a un chat
+      socket.on('userAddedToChat', (data) => {
+        console.log('Usuario agregado a chat:', data);
+        
+        // Mostrar notificación
+        showNotification(`Has sido agregado a un chat con ${data.otherUsername || 'un usuario'}`, 'info');
+        
+        // Actualizar inmediatamente la lista de chats
+        socket.emit('allChats');
+        
+        // Si estamos en la vista de chats, renderizar inmediatamente
+        if (currentView === 'chats') {
+          setTimeout(() => {
+            renderChatList(chats);
+          }, 100);
+        }
       });
 
       socket.on('sendMessageChat', (data) => {
         console.log('Mensaje de chat recibido:', data);
-        handleIncomingChatMessage(data);
+        if (data && data.message && data.usernameSender) {
+          handleIncomingChatMessage(data);
+        }
       });
 
       socket.on('typingChat', (data) => {
         console.log('Evento typing chat recibido:', data);
-        handleTypingChat(data);
+        if (data) {
+          handleTypingChat(data);
+        }
       });
 
       // Eventos de grupos
       socket.on('allGroups', (data) => {
         console.log('Grupos recibidos:', data);
-        groups = Array.isArray(data) ? data : (data ? [data] : []);
+        
+        // Procesar datos de grupos con validación básica pero menos restrictiva
+        if (data && Array.isArray(data)) {
+          groups = data.filter(group => 
+            group && 
+            group.id && 
+            group.name &&
+            group.name.trim() !== '' &&
+            group.name !== 'undefined'
+          );
+        } else if (data && data.id && data.name) {
+          groups = [data];
+        } else {
+          groups = [];
+        }
+        
+        console.log('Grupos procesados:', groups);
+        
+        // SIEMPRE renderizar si estamos en la vista de grupos
         if (currentView === 'groups') {
           renderGroupList(groups);
         }
@@ -1204,24 +1318,43 @@
 
       socket.on('messagesGroup', (messages) => {
         console.log('Mensajes de grupo recibidos:', messages);
-        renderMessages(messages, 'group');
+        if (messages && Array.isArray(messages)) {
+          renderMessages(messages, 'group');
+        }
       });
 
       socket.on('createGroup', (newGroup) => {
         console.log('Nuevo grupo creado:', newGroup);
-        showNotification('Grupo creado correctamente', 'success');
-        // Actualizar la lista de grupos
-        socket.emit('allGroups');
+        if (newGroup && newGroup.id) {
+          showNotification('Grupo creado correctamente', 'success');
+          
+          // Cambiar automáticamente a la vista de grupos
+          if (currentView !== 'groups') {
+            switchView('groups');
+          }
+          
+          // Actualizar la lista de grupos inmediatamente
+          socket.emit('allGroups');
+          
+          // Actualizar nuevamente después de un breve delay para asegurar sincronización
+          setTimeout(() => {
+            socket.emit('allGroups');
+          }, 500);
+        }
       });
 
       socket.on('sendMessageGroup', (data) => {
         console.log('Mensaje de grupo recibido:', data);
-        handleIncomingGroupMessage(data, 'sendMessageGroup');
+        if (data && data.message) {
+          handleIncomingGroupMessage(data, 'sendMessageGroup');
+        }
       });
 
       socket.on('typingGroup', (data) => {
         console.log('Evento typing grupo recibido:', data);
-        handleTypingGroup(data);
+        if (data) {
+          handleTypingGroup(data);
+        }
       });
 
       socket.on('inviteGroup', (data) => {
@@ -1233,12 +1366,21 @@
         // Actualizar la lista de grupos inmediatamente
         socket.emit('allGroups');
         
-        // Si estamos en la vista de grupos, actualizar la interfaz
+        // Si estamos en la vista de grupos, actualizar la interfaz inmediatamente
         if (currentView === 'groups') {
           setTimeout(() => {
             socket.emit('allGroups');
-          }, 1000);
+            renderGroupList(groups);
+          }, 200);
         }
+        
+        // Actualizar nuevamente después de un delay más largo para asegurar sincronización
+        setTimeout(() => {
+          socket.emit('allGroups');
+          if (currentView === 'groups') {
+            renderGroupList(groups);
+          }
+        }, 1000);
       });
 
       socket.on('error_message', (err) => {
@@ -1268,6 +1410,24 @@
       socket.onAny((eventName, ...args) => {
         console.log(`Evento recibido: ${eventName}`, args);
       });
+
+      // Agregar este nuevo evento después de los otros eventos del socket
+      socket.on('userAddedToGroup', (data) => {
+        console.log('Usuario agregado a grupo:', data);
+        
+        // Mostrar notificación
+        showNotification(`Has sido agregado al grupo: ${data.groupName || 'Nuevo grupo'}`, 'info');
+        
+        // Actualizar inmediatamente la lista de grupos
+        socket.emit('allGroups');
+        
+        // Si estamos en la vista de grupos, renderizar inmediatamente
+        if (currentView === 'groups') {
+          setTimeout(() => {
+            renderGroupList(groups);
+          }, 100);
+        }
+      });
     }
 
     function generateMessageId(data) {
@@ -1282,9 +1442,15 @@
     function handleIncomingChatMessage(data) {
       console.log('Procesando mensaje de chat:', data);
       
+      // Validar datos básicos
+      if (!data || !data.message || !data.usernameSender) {
+        console.log('Mensaje de chat inválido ignorado:', data);
+        return;
+      }
+      
       // Determinar si es mensaje saliente o entrante
       const isOutgoing = data.usernameSender === currentUser.username;
-      const senderName = data.usernameSender || 'Usuario desconocido';
+      const senderName = data.usernameSender;
       
       console.log('Mensaje de chat - Remitente:', senderName, 'Es propio:', isOutgoing);
       
@@ -1347,8 +1513,8 @@
           try {
             const notification = new Notification(`Nuevo mensaje de ${senderName}`, {
               body: data.message,
-              icon: '/favicon.ico', // Puedes cambiar esto por un icono personalizado
-              tag: `chat-${messageChatId}`, // Para reemplazar notificaciones del mismo chat
+              icon: '/favicon.ico',
+              tag: `chat-${messageChatId}`,
               requireInteraction: false,
               silent: false
             });
@@ -1403,22 +1569,28 @@
     function handleIncomingGroupMessage(data, eventName = 'unknown') {
       console.log(`Procesando mensaje de grupo (evento ${eventName}):`, data);
       
+      // Validar datos básicos
+      if (!data || !data.message) {
+        console.log('Mensaje de grupo inválido ignorado:', data);
+        return;
+      }
+      
       // Extraer información del mensaje según diferentes formatos posibles
       let groupId = data.groupId || data.group_id || data.id;
       let senderName = data.usernameSender || data.username || data.user || data.sender || 'Usuario desconocido';
       let message = data.message || data.content || data.text;
       let messageDate = data.date || data.created_at || data.timestamp || new Date();
       
+      // Validar que el senderName no sea undefined
+      if (!senderName || senderName === 'undefined' || senderName.trim() === '') {
+        console.log('Mensaje de grupo con sender undefined ignorado:', data);
+        return;
+      }
+      
       // Si no tenemos groupId pero tenemos un grupo activo, usar ese
       if (!groupId && activeGroup) {
         groupId = activeGroup.id;
         console.log('Usando ID del grupo activo:', groupId);
-      }
-      
-      // Si no tenemos mensaje, ignorar
-      if (!message) {
-        console.log('Mensaje sin contenido ignorado');
-        return;
       }
       
       // Determinar si es mensaje saliente o entrante
@@ -1485,8 +1657,8 @@
             console.log('Creando notificación del navegador para grupo:', groupName);
             const notification = new Notification(`Nuevo mensaje en ${groupName}`, {
               body: `${senderName}: ${message}`,
-              icon: '/favicon.ico', // Puedes cambiar esto por un icono personalizado
-              tag: `group-${groupId}`, // Para reemplazar notificaciones del mismo grupo
+              icon: '/favicon.ico',
+              tag: `group-${groupId}`,
               requireInteraction: false,
               silent: false
             });
@@ -1559,6 +1731,11 @@
         chatId = data.chatId || data.chat_id;
       }
       
+      // Validar que el username no sea undefined
+      if (!username || username === 'undefined' || username.trim() === '') {
+        return;
+      }
+      
       // Si no tenemos chatId, buscar el chat basándose en el username
       if (username && !chatId) {
         const chat = chats.find(c => 
@@ -1594,6 +1771,11 @@
         }
       } else if (data && typeof data === 'object') {
         username = data.username || data.user || data.sender;
+      }
+      
+      // Validar que el username no sea undefined
+      if (!username || username === 'undefined' || username.trim() === '') {
+        return;
       }
       
       // Solo mostrar si tenemos datos válidos y no es el usuario actual
@@ -1682,6 +1864,14 @@
           hideError(newChatErrorMessage);
           newChatModal.style.display = 'flex';
         };
+        
+        // Solicitar chats del servidor y renderizar
+        if (socket) {
+          socket.emit('allChats');
+          // Actualizar múltiples veces para asegurar sincronización
+          setTimeout(() => socket.emit('allChats'), 300);
+          setTimeout(() => socket.emit('allChats'), 800);
+        }
         renderChatList(chats);
       } else {
         listTitle.textContent = 'Mis Grupos';
@@ -1690,6 +1880,13 @@
           hideError(newGroupErrorMessage);
           newGroupModal.style.display = 'flex';
         };
+        
+        // Solicitar grupos del servidor y renderizar
+        if (socket) {
+          socket.emit('allGroups');
+          // Actualizar nuevamente después de un delay
+          setTimeout(() => socket.emit('allGroups'), 300);
+        }
         renderGroupList(groups);
       }
       
@@ -1703,6 +1900,7 @@
       activeChat = null;
       activeGroup = null;
       
+      // Mostrar estado vacío en el área de mensajes
       chatMessages.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">👋</div>
@@ -1715,6 +1913,34 @@
       // Deshabilitar input
       messageInput.disabled = true;
       sendBtn.disabled = true;
+    }
+
+    // Agregar esta función después de las otras funciones de utilidad
+    function forceUpdateGroups() {
+      console.log('Forzando actualización de grupos...');
+      if (socket) {
+        socket.emit('allGroups');
+        setTimeout(() => {
+          socket.emit('allGroups');
+          if (currentView === 'groups') {
+            renderGroupList(groups);
+          }
+        }, 500);
+      }
+    }
+
+    // Agregar esta función después de forceUpdateGroups()
+    function forceUpdateChats() {
+      console.log('Forzando actualización de chats...');
+      if (socket) {
+        socket.emit('allChats');
+        setTimeout(() => {
+          socket.emit('allChats');
+          if (currentView === 'chats') {
+            renderChatList(chats);
+          }
+        }, 500);
+      }
     }
 
     function renderChatList(chatData) {
@@ -1732,6 +1958,12 @@
       }
       
       chatData.forEach(chat => {
+        // Validar que el chat tenga datos válidos pero menos restrictivo
+        if (!chat || !chat.id || !chat.user1_username || !chat.user2_username) {
+          console.log('Chat con datos inválidos ignorado:', chat);
+          return;
+        }
+        
         const chatItem = document.createElement('div');
         chatItem.className = 'chat-item';
         chatItem.dataset.chatId = chat.id;
@@ -1811,6 +2043,12 @@
       }
       
       groupData.forEach(group => {
+        // Validar que el grupo tenga datos válidos pero menos restrictivo
+        if (!group || !group.id || !group.name) {
+          console.log('Grupo con datos inválidos ignorado:', group);
+          return;
+        }
+        
         const groupItem = document.createElement('div');
         groupItem.className = 'chat-item';
         groupItem.dataset.groupId = group.id;
@@ -1896,6 +2134,11 @@
       }
       
       messages.forEach(msg => {
+        // Validar que el mensaje tenga datos válidos
+        if (!msg || !msg.message) {
+          return;
+        }
+        
         const isOutgoing = type === 'chat' ? 
           msg.sender === currentUser.id :
           msg.sender === currentUser.id;
@@ -1903,6 +2146,11 @@
         const senderName = type === 'chat' ? 
           (isOutgoing ? currentUser.username : msg.sender_username) :
           (isOutgoing ? currentUser.username : msg.username);
+        
+        // Validar que senderName no sea undefined
+        if (!senderName || senderName === 'undefined') {
+          return;
+        }
         
         addMessage(
           senderName,
@@ -1944,6 +2192,11 @@
     }
 
     function addMessage(user, message, date, isOutgoing = false, type = 'chat') {
+      // Validar que user no sea undefined
+      if (!user || user === 'undefined') {
+        user = 'Usuario desconocido';
+      }
+      
       const messageDiv = document.createElement('div');
       
       if (type === 'group') {
@@ -1960,7 +2213,7 @@
       });
       
       messageDiv.innerHTML = `
-        <div class="message-header">${user || 'Usuario desconocido'}</div>
+        <div class="message-header">${user}</div>
         <div class="message-content">${message}</div>
         <div class="message-time">${timeString}</div>
       `;
@@ -2143,6 +2396,11 @@
           user2: receiverUsername
         });
         
+        // Forzar actualización después de crear el chat
+        setTimeout(() => {
+          forceUpdateChats();
+        }, 1000);
+        
         newChatForm.reset();
         newChatModal.style.display = 'none';
       }
@@ -2169,6 +2427,11 @@
         socket.emit('createGroup', groupName);
         newGroupForm.reset();
         newGroupModal.style.display = 'none';
+        
+        // Forzar actualización después de crear el grupo
+        setTimeout(() => {
+          forceUpdateGroups();
+        }, 1000);
       }
     });
 
@@ -2203,8 +2466,8 @@
         // Enviar el array completo de usuarios según el socket.js: (usersList, groupId)
         socket.emit('inviteGroup', usersList, activeGroup.id);
         inviteUsersForm.reset();
+        inviteUsersModal.style.display = 'none';
         showNotification(`Invitaciones enviadas a ${usersList.length} usuario(s)`, 'success');
-        // NO cerrar el grupo ni cambiar la vista - mantener el grupo activo
       }
     });
 
@@ -2231,7 +2494,7 @@
     // Manejar errores de conexión del WebSocket
     window.addEventListener('beforeunload', () => {
       // Si hay un grupo activo, salir automáticamente
-      if (activeGroup) {
+      if (activeGroup && socket) {
         console.log('Saliendo automáticamente del grupo al cerrar página:', activeGroup.id);
         socket.emit('leaveGroupForMoment');
       }

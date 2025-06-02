@@ -33,8 +33,8 @@ export const connectDb = async () => {
             user1 INTEGER NOT NULL,
             user2 INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user1) REFERENCES Users(id),
-            FOREIGN KEY (user2) REFERENCES Users(id)
+            FOREIGN KEY (user1) REFERENCES Users(id) ON DELETE CASCADE, 
+            FOREIGN KEY (user2) REFERENCES Users(id) ON DELETE CASCADE
         )`)
         console.log('Se creo la tabla Chats')
 
@@ -47,6 +47,15 @@ export const connectDb = async () => {
             END$$;
         `)
 
+        await pool.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role') THEN
+                    CREATE TYPE role AS ENUM ('Admin', 'User');
+                END IF;
+            END$$;
+        `)
+
         await pool.query(`CREATE TABLE IF NOT EXISTS Messages_Chats (
             id SERIAL PRIMARY KEY,
             chat_id INTEGER NOT NULL,
@@ -55,9 +64,10 @@ export const connectDb = async () => {
             send_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             sender INTEGER NOT NULL,
             receiver INTEGER NOT NULL,
-            FOREIGN KEY (chat_id) REFERENCES Chats(id),
-            FOREIGN KEY (sender) REFERENCES Users(id),
-            FOREIGN KEY (receiver) REFERENCES Users(id)
+            edited BOOL NOT NULL DEFAULT FALSE,
+            FOREIGN KEY (chat_id) REFERENCES Chats(id) ON DELETE CASCADE,
+            FOREIGN KEY (sender) REFERENCES Users(id) ON DELETE CASCADE,
+            FOREIGN KEY (receiver) REFERENCES Users(id) ON DELETE CASCADE
         )`)
         console.log('Se creo la tabla Messages')
 
@@ -74,16 +84,18 @@ export const connectDb = async () => {
             send_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             sender INTEGER NOT NULL,
             state_message estado_mensaje NOT NULL DEFAULT 'Enviado',
-            FOREIGN KEY (group_id) REFERENCES Groups(id),
-            FOREIGN KEY (sender) REFERENCES Users(id)
+            edited BOOL NOT NULL DEFAULT FALSE, 
+            FOREIGN KEY (group_id) REFERENCES Groups(id) ON DELETE CASCADE,
+            FOREIGN KEY (sender) REFERENCES Users(id) ON DELETE CASCADE
         )`)
         console.log('Se creo la tabla Messages_Groups')
 
         await pool.query(`CREATE TABLE IF NOT EXISTS Groups_Users (
             user_id INTEGER NOT NULL,
             group_id INTEGER NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES Users(id),
-            FOREIGN KEY (group_id) REFERENCES Groups(id)
+            role role NOT NULL DEFAULT 'User',
+            FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+            FOREIGN KEY (group_id) REFERENCES Groups(id) ON DELETE CASCADE
         )`)
         console.log('Se creo la tabla Groups_Users')
     } catch (err) {

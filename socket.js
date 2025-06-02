@@ -131,7 +131,7 @@ const initializeSocket = (io) => {
         socket.on('createGroup', async (nameGroup) => {
             try {
                 const group = await chatService.createGroup(nameGroup)
-                await chatService.inviteUsersToGroup(socket.user.id, group.groupId)
+                await chatService.inviteUsersToGroup(socket.user.id, group.groupId, 'Admin')
                 socket.emit('createGroup', group)
             } catch (error) {
                 socket.emit('error_message', {
@@ -144,7 +144,7 @@ const initializeSocket = (io) => {
                 for (let i = 0; i < usersList.length; i++) {
                     const user = usersList[i]
                     const userInformation = await findUserIdByUsername(user)
-                    const group = await chatService.inviteUsersToGroup(userInformation.id, groupId)
+                    const group = await chatService.inviteUsersToGroup(userInformation.id, groupId, 'User')
                     const userSocketId = users.get(user)
                     if (!userSocketId.connected) {
                         socket.emit('error_message', {
@@ -153,6 +153,112 @@ const initializeSocket = (io) => {
                     }
                     socket.to(userSocketId).emit('inviteGroup', { username: user,  groupId})
                 }
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('editMessageChat', async (id, newMessage, usernameReceiver) => {
+            try {
+                const editMessage = await chatService.editMessageChat(id, newMessage)
+                const socketIdReceiver = users.get(usernameReceiver)
+                if (socketIdReceiver && io.sockets.sockets.get(socketIdReceiver)?.connected) {
+                    io.to(socketIdReceiver).emit('editMessageChat', editMessage)
+                    socket.emit('editMessageChat', editMessage)
+                }
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }            
+        })
+        socket.on('editMessageGroup', async (id, newMessage) => {
+            try {
+                const editMessage = await chatService.editMessageGroup(id, newMessage)
+                io.to(socket.connectedRoom).emit('editMessageGroup', editMessage)
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('deleteMessageChat', async (id, usernameReceiver) => {
+            try {
+                const message = await chatService.deleteMessageChat(id)
+                const socketIdReceiver = users.get(usernameReceiver)
+                if (socketIdReceiver && io.sockets.sockets.get(socketIdReceiver)?.connected) {
+                    io.to(socketIdReceiver).emit('deleteMessageChat', message)
+                    socket.emit('deleteMessageChat', message)
+                }
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('deleteMessageGroup', async (id) => {
+            try {
+                const message = await chatService.deleteMessageGroup(id)
+                io.to(socket.connectedRoom).emit('deleteMessageGroup', message)
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('editChat', async (id, newName, usernameReceiver) => {
+            try {
+                const newChat = await chatService.editChat(id, newName)
+                const socketIdReceiver = users.get(usernameReceiver)
+                if (socketIdReceiver && io.sockets.sockets.get(socketIdReceiver)?.connected) {
+                    io.to(socketIdReceiver).emit('editChat', newChat)
+                    socket.emit('editChat', newChat)
+                }
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('editGroup', async (id, newName) => {
+            try {
+                const newGroup = await chatService.editGroup(id, newName)
+                io.to(socket.connectedRoom).emit('editGroup', newGroup)
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('deleteChat', async (chatId, usernameReceiver) => {
+            try {
+                const deleteMessage = await chatService.deleteChat(chatId)
+                const socketIdReceiver = users.get(usernameReceiver)
+                if (socketIdReceiver && io.sockets.sockets.get(socketIdReceiver)?.connected) {
+                    io.to(socketIdReceiver).emit('deleteChat', deleteMessage)
+                    socket.emit('deleteChat', deleteMessage)
+                }
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('deleteGroup', async (groupId, role) => {
+            try {
+                const deleteMessage = await chatService.deleteGroup(groupId,role)
+                io.to(socket.connectedRoom).emit('deleteGroup', deleteMessage)
+            } catch (error) {
+                socket.emit('error_message', {
+                    message: error.message || 'Internal Server Error'
+                })
+            }
+        })
+        socket.on('expelUser', async (userId, role, groupId) => {
+            try {
+                const expelUserMessage = await chatService.deleteUserGroup(userId, role, groupId)
+                io.to(socket.connectedRoom).emit('expelUser', expelUserMessage)
             } catch (error) {
                 socket.emit('error_message', {
                     message: error.message || 'Internal Server Error'
