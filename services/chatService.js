@@ -146,7 +146,7 @@ export const getMessagesGroups = async (groupId, limit, offset) => {
 }
 
 export const getUsersOfGroup = async (groupId) => {
-    const users = await pool.query(`SELECT u.username, g.role FROM Groups_Users g JOIN Users u ON g.user_id = u.id WHERE group_id = $1`, [groupId])
+    const users = await pool.query(`SELECT u.id, u.username, g.role FROM Groups_Users g JOIN Users u ON g.user_id = u.id WHERE group_id = $1`, [groupId])
     if (users.rows.length === 0) {
         return { message: 'Este grupo no tiene usuarios' }
     }
@@ -192,8 +192,8 @@ export const editMessageChat = async (id, newMessage) => {
     if (!foundMessage) {
         throw new AppError('El mensaje no existe', 404)
     }
-    await pool.query(`UPDATE Messages_Chats SET message = $1, edited = $2 WHERE id = $3`, [newMessage, true, id])
-    return newMessage
+    const changes = await pool.query(`UPDATE Messages_Chats SET message = $1, edited = $2 WHERE id = $3 RETURNING id, message`, [newMessage, true, id])
+    return changes.rows[0]
 }
 
 export const editMessageGroup = async (id, newMessage) => {
@@ -202,8 +202,8 @@ export const editMessageGroup = async (id, newMessage) => {
     if (!foundMessage) {
         throw new AppError('El mensaje no existe', 404)
     }
-    await pool.query(`UPDATE Messages_Groups SET message = $1, edited = $2 WHERE id = $3`, [newMessage, true, id])
-    return newMessage
+    const changes = await pool.query(`UPDATE Messages_Groups SET message = $1, edited = $2 WHERE id = $3 RETURNING id, message`, [newMessage, true, id])
+    return changes.rows[0]
 }
 
 export const deleteMessageChat = async (id) => {
@@ -227,17 +227,17 @@ export const deleteMessageGroup = async (id) => {
 }
 
 export const deleteChat = async (chatId) => {
-    const chat = await pool.query(`SELECT name FROM Chats WHERE id = $1`, [id])
+    const chat = await pool.query(`SELECT name FROM Chats WHERE id = $1`, [chatId])
     const foundChat = chat.rows[0]
     if (!foundChat) {
         throw new AppError('El chat no existe', 404)
     }
-    await pool.query(`DELETE FROM Chats WHERE id = $1`, [id])
+    await pool.query(`DELETE FROM Chats WHERE id = $1`, [chatId])
     return { message: 'El chat se elimino correctamente' }
 }
 
 export const deleteGroup = async (groupId, role) => {
-    if (!role === 'Admin') {
+    if (role !== 'Admin') {
         throw new AppError('El usuario no puede borrar el grupo', 401)
     }
     const group = await pool.query(`SELECT name FROM Groups WHERE id = $1`, [groupId])
@@ -250,7 +250,7 @@ export const deleteGroup = async (groupId, role) => {
 }
 
 export const deleteUserGroup = async (userId, role, groupId) => {
-    if (!role === 'Admin') {
+    if (role !== 'Admin') {
         throw new AppError('El usuario no puede expulsar usuarios del grupo', 401)
     }
     const group = await pool.query(`SELECT name FROM Groups WHERE id = $1`, [groupId])

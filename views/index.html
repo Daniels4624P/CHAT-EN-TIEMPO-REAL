@@ -1,733 +1,1180 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebChat - Aplicación en tiempo real</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-      color: #333;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-      color: white;
-    }
-
-    .header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .header p {
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
-
-    .auth-container {
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-
-    .form-card {
-      background: white;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      width: 350px;
-      transition: transform 0.3s ease;
-    }
-
-    .form-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .form-card h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      color: #4A90E2;
-      font-size: 1.5rem;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #666;
-      font-weight: 500;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 2px solid #e1e5e9;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #4A90E2;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 600;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #4A90E2, #357ABD);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
-    }
-
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-      margin: 0.5rem;
-    }
-
-    .btn-secondary:hover {
-      background: #545b62;
-    }
-
-    .btn-success {
-      background: #28a745;
-      color: white;
-    }
-
-    .btn-success:hover {
-      background: #218838;
-    }
-
-    .chat-container {
-      display: none;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      width: 100%;
-      max-width: 1200px;
-      height: 80vh;
-      padding: 0;
-      overflow: hidden;
-    }
-
-    .chat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      border-bottom: 2px solid #e1e5e9;
-      background: #f8f9fa;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #4A90E2, #357ABD);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-    }
-
-    .chat-layout {
-      display: flex;
-      height: calc(80vh - 60px);
-    }
-
-    .chat-sidebar {
-      width: 350px;
-      border-right: 2px solid #e1e5e9;
-      display: flex;
-      flex-direction: column;
-      background: #f8f9fa;
-    }
-
-    .chat-tabs {
-      display: flex;
-      border-bottom: 2px solid #e1e5e9;
-    }
-
-    .chat-tab {
-      flex: 1;
-      padding: 1rem;
-      text-align: center;
-      cursor: pointer;
-      background: #f8f9fa;
-      border: none;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-
-    .chat-tab.active {
-      background: white;
-      color: #4A90E2;
-      border-bottom: 2px solid #4A90E2;
-    }
-
-    .chat-tab:hover {
-      background: #e9ecef;
-    }
-
-    .chat-list-header {
-      padding: 1rem;
-      border-bottom: 1px solid #e1e5e9;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .chat-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0.5rem;
-    }
-
-    .chat-item {
-      padding: 0.75rem;
-      border-radius: 8px;
-      margin-bottom: 0.5rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      position: relative;
-    }
-
-    .chat-item:hover {
-      background-color: #e9ecef;
-    }
-
-    .chat-item.active {
-      background-color: #e1e5e9;
-    }
-
-    .chat-item-name {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .chat-item-preview {
-      font-size: 0.85rem;
-      color: #666;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .chat-notification-badge {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background-color: #dc3545;
-      color: white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: bold;
-    }
-
-    .group-badge {
-      background: #28a745;
-      color: white;
-      font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 10px;
-      margin-left: 0.5rem;
-    }
-
-    .typing-indicator-sidebar {
-      font-size: 0.7rem;
-      color: #4A90E2;
-      font-style: italic;
-      display: none;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .chat-main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .chat-info-header {
-      padding: 1rem;
-      border-bottom: 1px solid #e1e5e9;
-      background: #f8f9fa;
-      display: none;
-    }
-
-    .chat-info-header.show {
-      display: block;
-    }
-
-    .chat-info-title {
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .chat-info-subtitle {
-      font-size: 0.9rem;
-      color: #666;
-    }
-
-    .group-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-
-    .chat-messages {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      background: #f8f9fa;
-    }
-
-    .chat-input-container {
-      padding: 1rem;
-      border-top: 2px solid #e1e5e9;
-      display: flex;
-      gap: 0.5rem;
-      background: white;
-    }
-
-    .chat-input {
-      flex: 1;
-      padding: 0.75rem;
-      border: 2px solid #e1e5e9;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-
-    .message {
-      margin-bottom: 1rem;
-      max-width: 80%;
-      clear: both;
-    }
-
-    .message-outgoing {
-      float: right;
-      background: #dcf8c6;
-      border-radius: 15px 0 15px 15px;
-      padding: 0.75rem;
-      margin-left: 20%;
-    }
-
-    .message-incoming {
-      float: left;
-      background: white;
-      border-radius: 0 15px 15px 15px;
-      padding: 0.75rem;
-      border: 1px solid #e1e5e9;
-      margin-right: 20%;
-    }
-
-    .message-group {
-      float: none;
-      background: #e3f2fd;
-      border-radius: 15px;
-      padding: 0.75rem;
-      margin: 0.5rem auto;
-      max-width: 90%;
-    }
-
-    .message-group.message-outgoing {
-      background: #dcf8c6;
-      margin-left: auto;
-      margin-right: 0;
-      float: right;
-    }
-
-    .message-group.message-incoming {
-      background: #e3f2fd;
-      margin-left: 0;
-      margin-right: auto;
-      float: left;
-    }
-
-    .message-header {
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 0.25rem;
-    }
-
-    .message-content {
-      word-wrap: break-word;
-    }
-
-    .message-time {
-      font-size: 0.7rem;
-      color: #666;
-      text-align: right;
-      margin-top: 0.25rem;
-    }
-
-    .message-pending {
-      opacity: 0.6;
-      position: relative;
-    }
-
-    .message-pending::after {
-      content: "Enviando...";
-      position: absolute;
-      bottom: 5px;
-      right: 10px;
-      font-size: 0.6rem;
-      color: #999;
-      font-style: italic;
-    }
-
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 2rem;
-      color: white;
-    }
-
-    .spinner {
-      border: 4px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top: 4px solid white;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
-      z-index: 1000;
-      transform: translateX(400px);
-      transition: transform 0.3s ease;
-    }
-
-    .notification.show {
-      transform: translateX(0);
-    }
-
-    .notification.success {
-      background: #28a745;
-    }
-
-    .notification.error {
-      background: #dc3545;
-    }
-
-    .notification.info {
-      background: #17a2b8;
-    }
-
-    .notification.message {
-      background: #4A90E2;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background-color: white;
-      padding: 2rem;
-      border-radius: 15px;
-      width: 90%;
-      max-width: 500px;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .modal-title {
-      font-size: 1.5rem;
-      color: #4A90E2;
-    }
-
-    .modal-close {
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: #666;
-    }
-
-    .typing-indicator {
-      font-style: italic;
-      color: #666;
-      padding: 0.5rem;
-      display: none;
-      animation: pulse 1.5s infinite;
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #666;
-      text-align: center;
-      padding: 2rem;
-    }
-
-    .empty-state-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      color: #4A90E2;
-    }
-
-    .user-list {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #e1e5e9;
-      border-radius: 8px;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .user-item {
-      padding: 0.5rem;
-      border-radius: 4px;
-      margin-bottom: 0.25rem;
-      background: #f8f9fa;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .user-item button {
-      padding: 0.25rem 0.5rem;
-      font-size: 0.8rem;
-      width: auto;
-    }
-
-    .error-message {
-      color: #dc3545;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-      display: none;
-    }
-
-    .connection-status {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 0.8rem;
-      color: white;
-      background-color: #6c757d;
-      z-index: 1000;
-    }
-
-    .connection-status.connected {
-      background-color: #28a745;
-    }
-
-    .connection-status.disconnected {
-      background-color: #dc3545;
-    }
-
-    .connection-status.connecting {
-      background-color: #ffc107;
-      animation: pulse 1.5s infinite;
-    }
-
-    @media (max-width: 768px) {
-      .auth-container {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .form-card {
-        width: 100%;
-        max-width: 400px;
-      }
-
-      .header h1 {
-        font-size: 2rem;
-      }
-
-      .chat-layout {
-        flex-direction: column;
-      }
-
-      .chat-sidebar {
-        width: 100%;
-        height: 40%;
-        border-right: none;
-        border-bottom: 2px solid #e1e5e9;
-      }
-
-      .chat-main {
-        height: 60%;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebChat - Aplicación en tiempo real</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: #333;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.auth-container {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.form-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  width: 350px;
+  transition: transform 0.3s ease;
+}
+
+.form-card:hover {
+  transform: translateY(-5px);
+}
+
+.form-card h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #4A90E2;
+  font-size: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-weight: 500;
+}
+
+input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 2px solid #e1e5e9;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4A90E2;
+}
+
+.btn {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  margin: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background: #138496;
+}
+
+.chat-container {
+  display: none;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 1400px;
+  height: 85vh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 2px solid #e1e5e9;
+  background: #f8f9fa;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.chat-layout {
+  display: flex;
+  height: calc(85vh - 60px);
+}
+
+.chat-sidebar {
+  width: 350px;
+  border-right: 2px solid #e1e5e9;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+
+.chat-tabs {
+  display: flex;
+  border-bottom: 2px solid #e1e5e9;
+}
+
+.chat-tab {
+  flex: 1;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: #f8f9fa;
+  border: none;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.chat-tab.active {
+  background: white;
+  color: #4A90E2;
+  border-bottom: 2px solid #4A90E2;
+}
+
+.chat-tab:hover {
+  background: #e9ecef;
+}
+
+.chat-list-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e1e5e9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.chat-item {
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+
+.chat-item:hover {
+  background-color: #e9ecef;
+  transform: translateX(5px);
+}
+
+.chat-item.active {
+  background-color: #e1e5e9;
+  border-left: 4px solid #4A90E2;
+}
+
+.chat-item.removing {
+  animation: slideOut 0.3s ease forwards;
+}
+
+.chat-item.updating {
+  background-color: #fff3cd;
+  animation: pulse 0.5s ease;
+}
+
+.chat-item.new-message {
+  background-color: #d4edda;
+  animation: newMessagePulse 1s ease;
+}
+
+.chat-item.refreshing {
+  background-color: #cce5ff;
+  animation: refreshPulse 0.8s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 100px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    background-color: #fff3cd; 
+  }
+  50% { 
+    background-color: #ffeaa7; 
+  }
+}
+
+@keyframes newMessagePulse {
+  0%, 100% { 
+    background-color: #d4edda; 
+  }
+  50% { 
+    background-color: #c3e6cb; 
+  }
+}
+
+@keyframes refreshPulse {
+  0%, 100% { 
+    background-color: #cce5ff; 
+  }
+  50% { 
+    background-color: #99d6ff; 
+  }
+}
+
+.chat-item-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chat-item-preview {
+  font-size: 0.85rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-notification-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+.group-badge {
+  background: #28a745;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  margin-left: 0.5rem;
+}
+
+.admin-badge {
+  background: #6f42c1;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  margin-left: 0.5rem;
+}
+
+.typing-indicator-sidebar {
+  font-size: 0.7rem;
+  color: #4A90E2;
+  font-style: italic;
+  display: none;
+  animation: pulse 1.5s infinite;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-info-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e1e5e9;
+  background: #f8f9fa;
+  display: none;
+}
+
+.chat-info-header.show {
+  display: block;
+}
+
+.chat-info-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.chat-info-subtitle {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.group-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Sección mejorada para usuarios del grupo */
+.group-users-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #e3f2fd;
+  border-radius: 8px;
+  display: none;
+}
+
+.group-users-section.show {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.group-users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.group-users-title {
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
+.users-count {
+  background: #1976d2;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.group-users-list {
+  max-height: 150px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.group-user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.group-user-item:hover {
+  background: #f5f5f5;
+  transform: translateX(2px);
+}
+
+.group-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.group-user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 0.7rem;
+}
+
+.group-user-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.btn-mini {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.chat-messages-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+.chat-input-container {
+  padding: 1rem;
+  border-top: 2px solid #e1e5e9;
+  display: flex;
+  gap: 0.5rem;
+  background: white;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.message {
+  margin-bottom: 1rem;
+  max-width: 80%;
+  clear: both;
+  position: relative;
+  animation: messageAppear 0.3s ease;
+}
+
+.message.message-editing {
+  background-color: #fff3cd !important;
+  animation: editingPulse 1s ease infinite;
+}
+
+.message.message-deleting {
+  animation: deletingFade 0.5s ease forwards;
+}
+
+.message.message-refreshing {
+  animation: messageRefresh 0.6s ease;
+}
+
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes editingPulse {
+  0%, 100% { 
+    background-color: #fff3cd !important; 
+  }
+  50% { 
+    background-color: #ffeaa7 !important; 
+  }
+}
+
+@keyframes deletingFade {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes messageRefresh {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+.message-outgoing {
+  float: right;
+  background: #dcf8c6;
+  border-radius: 15px 0 15px 15px;
+  padding: 0.75rem;
+  margin-left: 20%;
+}
+
+.message-incoming {
+  float: left;
+  background: white;
+  border-radius: 0 15px 15px 15px;
+  padding: 0.75rem;
+  border: 1px solid #e1e5e9;
+  margin-right: 20%;
+}
+
+.message-group {
+  float: none;
+  background: #e3f2fd;
+  border-radius: 15px;
+  padding: 0.75rem;
+  margin: 0.5rem auto;
+  max-width: 90%;
+}
+
+.message-group.message-outgoing {
+  background: #dcf8c6;
+  margin-left: auto;
+  margin-right: 0;
+  float: right;
+}
+
+.message-group.message-incoming {
+  background: #e3f2fd;
+  margin-left: 0;
+  margin-right: auto;
+  float: left;
+}
+
+.message-header {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.message-content {
+  word-wrap: break-word;
+  padding-right: 30px;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: #666;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.message-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.message:hover .message-actions {
+  opacity: 1;
+}
+
+.message-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.message-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  color: #666;
+  font-size: 14px;
+}
+
+.message-menu-btn:hover {
+  background: rgba(0,0,0,0.1);
+}
+
+.message-menu-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 120px;
+}
+
+.message-menu-content.show {
+  display: block;
+}
+
+.message-menu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+}
+
+.message-menu-item:hover {
+  background: #f5f5f5;
+}
+
+.message-menu-item.danger {
+  color: #dc3545;
+}
+
+.loading {
+  display: none;
+  text-align: center;
+  padding: 2rem;
+  color: white;
+}
+
+.spinner {
+  border: 4px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top: 4px solid white;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 1000;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.notification.show {
+  transform: translateX(0);
+}
+
+.notification.success {
+  background: #28a745;
+}
+
+.notification.error {
+  background: #dc3545;
+}
+
+.notification.info {
+  background: #17a2b8;
+}
+
+.notification.message {
+  background: #4A90E2;
+}
+
+.notification.warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  color: #4A90E2;
+}
+
+.modal-close {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.typing-indicator {
+  font-style: italic;
+  color: #666;
+  padding: 0.5rem;
+  display: none;
+  animation: pulse 1.5s infinite;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #4A90E2;
+}
+
+.user-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.user-item {
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-item button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  width: auto;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  display: none;
+}
+
+.connection-status {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  color: white;
+  background-color: #6c757d;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+  background-color: #28a745;
+}
+
+.connection-status.disconnected {
+  background-color: #dc3545;
+}
+
+.connection-status.connecting {
+  background-color: #ffc107;
+  animation: pulse 1.5s infinite;
+}
+
+.confirm-dialog {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirm-dialog-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.confirm-dialog-title {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.confirm-dialog-message {
+  color: #666;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.confirm-dialog-actions button {
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.edited-indicator {
+  font-size: 0.7rem;
+  color: #666;
+  font-style: italic;
+  margin-left: 0.5rem;
+}
+
+.realtime-indicator {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  color: white;
+  background-color: #28a745;
+  z-index: 1000;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.realtime-indicator.show {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .chat-layout {
+    flex-direction: column;
+  }
+
+  .chat-sidebar {
+    width: 100%;
+    height: 40%;
+    border-right: none;
+    border-bottom: 2px solid #e1e5e9;
+  }
+
+  .chat-main {
+    height: 60%;
+  }
+
+  .group-actions {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .group-users-section {
+    padding: 0.5rem;
+  }
+
+  .group-users-list {
+    max-height: 80px;
+  }
+}
+</style>
 </head>
 <body>
-  <div class="loading" id="loading">
-    <div class="spinner"></div>
-    <p>Verificando sesión...</p>
-  </div>
+<div class="loading" id="loading">
+<div class="spinner"></div>
+<p>Verificando sesión...</p>
+</div>
 
-  <div class="header">
-    <h1>WebChat</h1>
-    <p>Una aplicación de chat en tiempo real con grupos</p>
-  </div>
+<div class="realtime-indicator" id="realtimeIndicator">
+  ⚡ Actualización en tiempo real
+</div>
 
-  <div class="auth-container" id="authContainer">
-    <div class="form-card">
-      <h2>Registro</h2>
-      <form id="registerForm">
-        <div class="form-group">
-          <label for="regName">Nombre</label>
-          <input type="text" id="regName" name="username" placeholder="Tu nombre completo" required />
-        </div>
-        <div class="form-group">
-          <label for="regEmail">Correo electrónico</label>
-          <input type="email" id="regEmail" name="email" placeholder="tu@email.com" required />
-        </div>
-        <div class="form-group">
-          <label for="regPassword">Contraseña</label>
-          <input type="password" id="regPassword" name="password" placeholder="Mínimo 6 caracteres" required />
-        </div>
-        <div class="error-message" id="regErrorMessage"></div>
-        <button type="submit" class="btn btn-primary">Registrarse</button>
-      </form>
+<div class="header">
+<h1>WebChat</h1>
+<p>Una aplicación de chat en tiempo real con grupos</p>
+</div>
+
+<div class="auth-container" id="authContainer">
+<div class="form-card">
+  <h2>Registro</h2>
+  <form id="registerForm">
+    <div class="form-group">
+      <label for="regName">Nombre</label>
+      <input type="text" id="regName" name="username" placeholder="Tu nombre completo" required />
     </div>
+    <div class="form-group">
+      <label for="regEmail">Correo electrónico</label>
+      <input type="email" id="regEmail" name="email" placeholder="tu@email.com" required />
+    </div>
+    <div class="form-group">
+      <label for="regPassword">Contraseña</label>
+      <input type="password" id="regPassword" name="password" placeholder="Mínimo 6 caracteres" required />
+    </div>
+    <div class="error-message" id="regErrorMessage"></div>
+    <button type="submit" class="btn btn-primary">Registrarse</button>
+  </form>
+</div>
 
-    <div class="form-card">
-      <h2>Iniciar Sesión</h2>
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="loginEmail">Correo electrónico</label>
-          <input type="email" id="loginEmail" name="email" placeholder="tu@email.com" required />
-        </div>
-        <div class="form-group">
-          <label for="loginPassword">Contraseña</label>
-          <input type="password" id="loginPassword" name="password" placeholder="Tu contraseña" required />
-        </div>
-        <div class="error-message" id="loginErrorMessage"></div>
-        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
-      </form>
+<div class="form-card">
+  <h2>Iniciar Sesión</h2>
+  <form id="loginForm">
+    <div class="form-group">
+      <label for="loginEmail">Correo electrónico</label>
+      <input type="email" id="loginEmail" name="email" placeholder="tu@email.com" required />
+    </div>
+    <div class="form-group">
+      <label for="loginPassword">Contraseña</label>
+      <input type="password" id="loginPassword" name="password" placeholder="Tu contraseña" required />
+    </div>
+    <div class="error-message" id="loginErrorMessage"></div>
+    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+  </form>
+</div>
+</div>
+
+<div class="chat-container" id="chatContainer">
+<div class="chat-header">
+  <div class="user-info">
+    <div class="user-avatar" id="userAvatar"></div>
+    <div>
+      <div id="userName" style="font-weight: 600;"></div>
+      <div id="userEmail" style="font-size: 0.9rem; color: #666;"></div>
+    </div>
+  </div>
+  <button class="btn btn-secondary" id="logoutBtn">Cerrar Sesión</button>
+</div>
+
+<div class="chat-layout">
+  <div class="chat-sidebar">
+    <div class="chat-tabs">
+      <button class="chat-tab active" id="chatsTab">Chats</button>
+      <button class="chat-tab" id="groupsTab">Grupos</button>
+    </div>
+    
+    <div class="chat-list-header">
+      <h3 id="listTitle">Mis Chats</h3>
+      <button class="btn btn-primary" id="newChatBtn" style="width: auto; padding: 0.5rem 1rem;">Nuevo Chat</button>
+    </div>
+    
+    <div class="chat-list" id="chatList">
+      <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <p>No tienes chats activos</p>
+        <p>Crea un nuevo chat para comenzar</p>
+      </div>
     </div>
   </div>
 
-  <div class="chat-container" id="chatContainer">
-    <div class="chat-header">
-      <div class="user-info">
-        <div class="user-avatar" id="userAvatar"></div>
-        <div>
-          <div id="userName" style="font-weight: 600;"></div>
-          <div id="userEmail" style="font-size: 0.9rem; color: #666;"></div>
+  <div class="chat-main">
+    <div class="chat-info-header" id="chatInfoHeader">
+      <div class="chat-info-title" id="chatInfoTitle"></div>
+      <div class="chat-info-subtitle" id="chatInfoSubtitle"></div>
+      
+      <!-- Sección de usuarios del grupo (siempre visible cuando hay grupo activo) -->
+      <div class="group-users-section" id="groupUsersSection">
+        <div class="group-users-header">
+          <span class="group-users-title">👥 Usuarios del Grupo</span>
+          <span class="users-count" id="usersCount">0</span>
+        </div>
+        <div class="group-users-list" id="groupUsersListInline">
+          <!-- Lista de usuarios se carga aquí -->
         </div>
       </div>
-      <button class="btn btn-secondary" id="logoutBtn">Cerrar Sesión</button>
-    </div>
-
-    <div class="chat-layout">
-      <div class="chat-sidebar">
-        <div class="chat-tabs">
-          <button class="chat-tab active" id="chatsTab">Chats</button>
-          <button class="chat-tab" id="groupsTab">Grupos</button>
-        </div>
-        
-        <div class="chat-list-header">
-          <h3 id="listTitle">Mis Chats</h3>
-          <button class="btn btn-primary" id="newChatBtn" style="width: auto; padding: 0.5rem 1rem;">Nuevo Chat</button>
-        </div>
-        
-        <div class="chat-list" id="chatList">
-          <div class="empty-state">
-            <div class="empty-state-icon">💬</div>
-            <p>No tienes chats activos</p>
-            <p>Crea un nuevo chat para comenzar</p>
-          </div>
-        </div>
+      
+      <div class="group-actions" id="groupActions">
+        <button class="btn btn-success" id="inviteUsersBtn" style="width: auto; padding: 0.5rem 1rem;">Invitar Usuarios</button>
+        <button class="btn btn-primary" id="editGroupBtn" style="width: auto; padding: 0.5rem 1rem;">Editar Grupo</button>
       </div>
-
-      <div class="chat-main">
-        <div class="chat-info-header" id="chatInfoHeader">
-          <div class="chat-info-title" id="chatInfoTitle"></div>
-          <div class="chat-info-subtitle" id="chatInfoSubtitle"></div>
-          <div class="group-actions" id="groupActions">
-            <button class="btn btn-success" id="inviteUsersBtn" style="width: auto; padding: 0.5rem 1rem;">Invitar Usuarios</button>
-          </div>
-        </div>
-        
+      <div class="chat-actions" id="chatActions">
+        <button class="btn btn-danger" id="deleteChatBtn" style="width: auto; padding: 0.5rem 1rem;">Eliminar</button>
+      </div>
+    </div>
+    
+    <div class="chat-content">
+      <div class="chat-messages-container">
         <div class="chat-messages" id="chatMessages">
           <div class="empty-state">
             <div class="empty-state-icon">👋</div>
@@ -751,1776 +1198,2357 @@
       </div>
     </div>
   </div>
+</div>
+</div>
 
-  <!-- Modal para crear nuevo chat -->
-  <div class="modal" id="newChatModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Crear Nuevo Chat</h3>
-        <span class="modal-close" id="closeModalBtn">&times;</span>
-      </div>
-      <form id="newChatForm">
-        <div class="form-group">
-          <label for="receiverUsername">Usuario Destinatario</label>
-          <input type="text" id="receiverUsername" name="receiverUsername" placeholder="Nombre de usuario" required />
-        </div>
-        <div class="error-message" id="newChatErrorMessage"></div>
-        <button type="submit" class="btn btn-primary">Crear Chat</button>
-      </form>
-    </div>
+<!-- Modal para crear nuevo chat -->
+<div class="modal" id="newChatModal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h3 class="modal-title">Crear Nuevo Chat</h3>
+    <span class="modal-close" id="closeModalBtn">&times;</span>
   </div>
-
-  <!-- Modal para crear nuevo grupo -->
-  <div class="modal" id="newGroupModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Crear Nuevo Grupo</h3>
-        <span class="modal-close" id="closeGroupModalBtn">&times;</span>
-      </div>
-      <form id="newGroupForm">
-        <div class="form-group">
-          <label for="groupName">Nombre del Grupo</label>
-          <input type="text" id="groupName" name="groupName" placeholder="Nombre del grupo" required />
-        </div>
-        <div class="error-message" id="newGroupErrorMessage"></div>
-        <button type="submit" class="btn btn-primary">Crear Grupo</button>
-      </form>
+  <form id="newChatForm">
+    <div class="form-group">
+      <label for="receiverUsername">Usuario Destinatario</label>
+      <input type="text" id="receiverUsername" name="receiverUsername" placeholder="Nombre de usuario" required />
     </div>
-  </div>
+    <div class="error-message" id="newChatErrorMessage"></div>
+    <button type="submit" class="btn btn-primary">Crear Chat</button>
+  </form>
+</div>
+</div>
 
-  <!-- Modal para invitar usuarios al grupo -->
-  <div class="modal" id="inviteUsersModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Invitar Usuarios al Grupo</h3>
-        <span class="modal-close" id="closeInviteModalBtn">&times;</span>
-      </div>
-      <form id="inviteUsersForm">
-        <div class="form-group">
-          <label for="usersToInvite">Usuarios a Invitar (separados por comas)</label>
-          <input type="text" id="usersToInvite" name="usersToInvite" placeholder="usuario1, usuario2, usuario3" required />
-        </div>
-        <div class="error-message" id="inviteUsersErrorMessage"></div>
-        <div class="user-list" id="selectedUsersList">
-          <!-- Lista de usuarios seleccionados -->
-        </div>
-        <button type="submit" class="btn btn-primary">Enviar Invitaciones</button>
-      </form>
+<!-- Modal para crear nuevo grupo -->
+<div class="modal" id="newGroupModal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h3 class="modal-title">Crear Nuevo Grupo</h3>
+    <span class="modal-close" id="closeGroupModalBtn">&times;</span>
+  </div>
+  <form id="newGroupForm">
+    <div class="form-group">
+      <label for="groupName">Nombre del Grupo</label>
+      <input type="text" id="groupName" name="groupName" placeholder="Nombre del grupo" required />
     </div>
+    <div class="error-message" id="newGroupErrorMessage"></div>
+    <button type="submit" class="btn btn-primary">Crear Grupo</button>
+  </form>
+</div>
+</div>
+
+<!-- Modal para invitar usuarios al grupo -->
+<div class="modal" id="inviteUsersModal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h3 class="modal-title">Invitar Usuarios al Grupo</h3>
+    <span class="modal-close" id="closeInviteModalBtn">&times;</span>
   </div>
+  <form id="inviteUsersForm">
+    <div class="form-group">
+      <label for="usersToInvite">Usuarios a Invitar (separados por comas)</label>
+      <input type="text" id="usersToInvite" name="usersToInvite" placeholder="usuario1, usuario2, usuario3" required />
+    </div>
+    <div class="error-message" id="inviteUsersErrorMessage"></div>
+    <button type="submit" class="btn btn-primary">Enviar Invitaciones</button>
+  </form>
+</div>
+</div>
 
-  <div class="connection-status" id="connectionStatus">Desconectado</div>
+<!-- Modal para editar mensaje -->
+<div class="modal" id="editMessageModal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h3 class="modal-title">Editar Mensaje</h3>
+    <span class="modal-close" id="closeEditMessageBtn">&times;</span>
+  </div>
+  <form id="editMessageForm">
+    <div class="form-group">
+      <label for="editMessageText">Mensaje</label>
+      <input type="text" id="editMessageText" placeholder="Editar mensaje" required />
+    </div>
+    <div class="error-message" id="editMessageErrorMessage"></div>
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+  </form>
+</div>
+</div>
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>
-    const API_BASE = 'http://localhost:3000/api/v1/auth';
-    
-    // Elementos del DOM
-    const loading = document.getElementById('loading');
-    const authContainer = document.getElementById('authContainer');
-    const chatContainer = document.getElementById('chatContainer');
-    const registerForm = document.getElementById('registerForm');
-    const loginForm = document.getElementById('loginForm');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const userName = document.getElementById('userName');
-    const userEmail = document.getElementById('userEmail');
-    const userAvatar = document.getElementById('userAvatar');
-    const chatMessages = document.getElementById('chatMessages');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const chatList = document.getElementById('chatList');
-    const newChatBtn = document.getElementById('newChatBtn');
-    const newChatModal = document.getElementById('newChatModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const newChatForm = document.getElementById('newChatForm');
-    const typingIndicator = document.getElementById('typingIndicator');
-    const connectionStatus = document.getElementById('connectionStatus');
-    
-    // Elementos de error
-    const regErrorMessage = document.getElementById('regErrorMessage');
-    const loginErrorMessage = document.getElementById('loginErrorMessage');
-    const newChatErrorMessage = document.getElementById('newChatErrorMessage');
-    const newGroupErrorMessage = document.getElementById('newGroupErrorMessage');
-    const inviteUsersErrorMessage = document.getElementById('inviteUsersErrorMessage');
-    
-    // Nuevos elementos para grupos
-    const chatsTab = document.getElementById('chatsTab');
-    const groupsTab = document.getElementById('groupsTab');
-    const listTitle = document.getElementById('listTitle');
-    const chatInfoHeader = document.getElementById('chatInfoHeader');
-    const chatInfoTitle = document.getElementById('chatInfoTitle');
-    const chatInfoSubtitle = document.getElementById('chatInfoSubtitle');
-    const groupActions = document.getElementById('groupActions');
-    const inviteUsersBtn = document.getElementById('inviteUsersBtn');
-    
-    // Modales para grupos
-    const newGroupModal = document.getElementById('newGroupModal');
-    const closeGroupModalBtn = document.getElementById('closeGroupModalBtn');
-    const newGroupForm = document.getElementById('newGroupForm');
-    const inviteUsersModal = document.getElementById('inviteUsersModal');
-    const closeInviteModalBtn = document.getElementById('closeInviteModalBtn');
-    const inviteUsersForm = document.getElementById('inviteUsersForm');
-    const selectedUsersList = document.getElementById('selectedUsersList');
+<!-- Modal para editar grupo -->
+<div class="modal" id="editGroupModal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h3 class="modal-title">Editar Grupo</h3>
+    <span class="modal-close" id="closeEditGroupBtn">&times;</span>
+  </div>
+  <form id="editGroupForm">
+    <div class="form-group">
+      <label for="editGroupName">Nombre del Grupo</label>
+      <input type="text" id="editGroupName" placeholder="Nuevo nombre del grupo" required />
+    </div>
+    <div class="error-message" id="editGroupErrorMessage"></div>
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+  </form>
+</div>
+</div>
 
-    // Estado de la aplicación
-    let currentUser = null;
-    let socket = null;
-    let activeChat = null;
-    let activeGroup = null;
-    let chats = [];
-    let groups = [];
-    let typingTimeout = null;
-    let unreadMessages = {}; // Para almacenar mensajes no leídos por chat
-    let unreadGroupMessages = {}; // Para almacenar mensajes no leídos por grupo
-    let notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    let typingUsers = {}; // Para almacenar qué usuarios están escribiendo en qué chats
-    let currentView = 'chats'; // 'chats' o 'groups'
-    let reconnectAttempts = 0;
-    let maxReconnectAttempts = 5;
-    let reconnectInterval = 3000; // 3 segundos
-    let reconnectTimer = null;
-    let processedMessages = new Set(); // Para evitar duplicados
-    let pendingMessages = new Map(); // Para rastrear mensajes pendientes
-    
-    // Funciones de utilidad
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => notification.classList.add('show'), 100);
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => document.body.removeChild(notification), 300);
-      }, 3000);
-    }
+<!-- Diálogo de confirmación -->
+<div class="confirm-dialog" id="confirmDialog">
+<div class="confirm-dialog-content">
+  <div class="confirm-dialog-title" id="confirmTitle">¿Estás seguro?</div>
+  <div class="confirm-dialog-message" id="confirmMessage">Esta acción no se puede deshacer.</div>
+  <div class="confirm-dialog-actions">
+    <button class="btn btn-secondary" id="confirmCancel">Cancelar</button>
+    <button class="btn btn-danger" id="confirmAccept">Confirmar</button>
+  </div>
+</div>
+</div>
 
-    function showLoading() {
-      loading.style.display = 'block';
-      authContainer.style.display = 'none';
-      chatContainer.style.display = 'none';
-    }
+<div class="connection-status" id="connectionStatus">Desconectado</div>
 
-    function showAuth() {
-      loading.style.display = 'none';
-      authContainer.style.display = 'flex';
-      chatContainer.style.display = 'none';
-      
-      // Limpiar mensajes de error
-      regErrorMessage.style.display = 'none';
-      loginErrorMessage.style.display = 'none';
-    }
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const API_BASE = 'https://chat-en-tiempo-real-hl51.onrender.com/api/v1/auth';
 
-    function showChat(user) {
-      loading.style.display = 'none';
-      authContainer.style.display = 'none';
-      chatContainer.style.display = 'block';
-      
-      currentUser = user;
-      userName.textContent = user.username || 'Usuario';
-      userEmail.textContent = user.email || '';
-      userAvatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
-      
-      // Inicializar WebSocket solo cuando el usuario esté autenticado
-      initializeSocket();
-    }
+// Elementos del DOM
+const loading = document.getElementById('loading');
+const authContainer = document.getElementById('authContainer');
+const chatContainer = document.getElementById('chatContainer');
+const registerForm = document.getElementById('registerForm');
+const loginForm = document.getElementById('loginForm');
+const logoutBtn = document.getElementById('logoutBtn');
+const userName = document.getElementById('userName');
+const userEmail = document.getElementById('userEmail');
+const userAvatar = document.getElementById('userAvatar');
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const chatList = document.getElementById('chatList');
+const newChatBtn = document.getElementById('newChatBtn');
+const newChatModal = document.getElementById('newChatModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const newChatForm = document.getElementById('newChatForm');
+const typingIndicator = document.getElementById('typingIndicator');
+const connectionStatus = document.getElementById('connectionStatus');
+const realtimeIndicator = document.getElementById('realtimeIndicator');
 
-    function showError(element, message) {
-      if (element && message) {
-        element.textContent = message;
-        element.style.display = 'block';
+// Elementos de error
+const regErrorMessage = document.getElementById('regErrorMessage');
+const loginErrorMessage = document.getElementById('loginErrorMessage');
+const newChatErrorMessage = document.getElementById('newChatErrorMessage');
+const newGroupErrorMessage = document.getElementById('newGroupErrorMessage');
+const inviteUsersErrorMessage = document.getElementById('inviteUsersErrorMessage');
+const editMessageErrorMessage = document.getElementById('editMessageErrorMessage');
+const editGroupErrorMessage = document.getElementById('editGroupErrorMessage');
+
+// Elementos para grupos
+const chatsTab = document.getElementById('chatsTab');
+const groupsTab = document.getElementById('groupsTab');
+const listTitle = document.getElementById('listTitle');
+const chatInfoHeader = document.getElementById('chatInfoHeader');
+const chatInfoTitle = document.getElementById('chatInfoTitle');
+const chatInfoSubtitle = document.getElementById('chatInfoSubtitle');
+const groupActions = document.getElementById('groupActions');
+const chatActions = document.getElementById('chatActions');
+const inviteUsersBtn = document.getElementById('inviteUsersBtn');
+const deleteChatBtn = document.getElementById('deleteChatBtn');
+const editGroupBtn = document.getElementById('editGroupBtn');
+
+// Elementos para usuarios del grupo
+const groupUsersSection = document.getElementById('groupUsersSection');
+const groupUsersListInline = document.getElementById('groupUsersListInline');
+const usersCount = document.getElementById('usersCount');
+
+// Modales
+const newGroupModal = document.getElementById('newGroupModal');
+const closeGroupModalBtn = document.getElementById('closeGroupModalBtn');
+const newGroupForm = document.getElementById('newGroupForm');
+const inviteUsersModal = document.getElementById('inviteUsersModal');
+const closeInviteModalBtn = document.getElementById('closeInviteModalBtn');
+const inviteUsersForm = document.getElementById('inviteUsersForm');
+const editMessageModal = document.getElementById('editMessageModal');
+const closeEditMessageBtn = document.getElementById('closeEditMessageBtn');
+const editMessageForm = document.getElementById('editMessageForm');
+const editMessageText = document.getElementById('editMessageText');
+const editGroupModal = document.getElementById('editGroupModal');
+const closeEditGroupBtn = document.getElementById('closeEditGroupBtn');
+const editGroupForm = document.getElementById('editGroupForm');
+const editGroupName = document.getElementById('editGroupName');
+const confirmDialog = document.getElementById('confirmDialog');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmCancel = document.getElementById('confirmCancel');
+const confirmAccept = document.getElementById('confirmAccept');
+
+// Estado de la aplicación
+let currentUser = null;
+let socket = null;
+let activeChat = null;
+let activeGroup = null;
+let chats = [];
+let groups = [];
+let typingTimeout = null;
+let unreadMessages = {};
+let unreadGroupMessages = {};
+let notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+let typingUsers = {};
+let currentView = 'chats';
+let reconnectAttempts = 0;
+let maxReconnectAttempts = 5;
+let reconnectInterval = 3000;
+let reconnectTimer = null;
+let processedMessages = new Set();
+let pendingMessages = new Map();
+let selectedMessageForEdit = null;
+let selectedMessageForDelete = null;
+let currentUserRole = 'User';
+let groupUsers = [];
+let socketConnected = false;
+let confirmCallback = null;
+let realtimeUpdateTimeout = null;
+let lastMessageTimestamps = {}; // Para evitar duplicados de mensajes
+let isRefreshing = false; // Para evitar múltiples refrescos simultáneos
+
+// FUNCIONES GLOBALES PARA LOS MENÚS DE MENSAJES
+window.toggleMessageMenu = function(button) {
+  document.querySelectorAll('.message-menu-content.show').forEach(menu => {
+    menu.classList.remove('show');
+  });
+  
+  const menu = button.nextElementSibling;
+  menu.classList.add('show');
+  
+  setTimeout(() => {
+    document.addEventListener('click', function closeMenu(e) {
+      if (!button.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('show');
+        document.removeEventListener('click', closeMenu);
       }
-    }
+    });
+  }, 10);
+};
 
-    function hideError(element) {
-      if (element) {
-        element.textContent = '';
-        element.style.display = 'none';
-      }
-    }
+window.editMessage = function(messageId, currentMessage) {
+  if (typeof messageId === 'string' && messageId.startsWith('temp_')) {
+    showNotification('Espera a que se envíe el mensaje antes de editarlo', 'warning');
+    return;
+  }
+  
+  selectedMessageForEdit = messageId;
+  editMessageText.value = currentMessage.replace(/\\'/g, "'");
+  editMessageModal.style.display = 'flex';
+  
+  document.querySelectorAll('.message-menu-content.show').forEach(menu => {
+    menu.classList.remove('show');
+  });
+};
 
-    function updateConnectionStatus(status) {
-      connectionStatus.textContent = status;
-      connectionStatus.className = 'connection-status';
+window.deleteMessage = function(messageId) {
+  if (typeof messageId === 'string' && messageId.startsWith('temp_')) {
+    showNotification('Espera a que se envíe el mensaje antes de editarlo', 'warning');
+    return;
+  }
+  
+  selectedMessageForDelete = messageId;
+  
+  showConfirmDialog(
+    '¿Eliminar mensaje?',
+    'Esta acción no se puede deshacer. El mensaje será eliminado permanentemente.',
+    () => {
+      if (socket && selectedMessageForDelete) {
+        console.log('Eliminando mensaje:', selectedMessageForDelete);
+        
+        showNotification('Eliminando mensaje...', 'info');
+        showRealtimeIndicator();
       
-      switch(status.toLowerCase()) {
-        case 'conectado':
-          connectionStatus.classList.add('connected');
-          break;
-        case 'desconectado':
-          connectionStatus.classList.add('disconnected');
-          break;
-        case 'conectando...':
-          connectionStatus.classList.add('connecting');
-          break;
-        default:
-          break;
+        if (currentView === 'chats' && activeChat) {
+          const receiverUsername = activeChat.user1_username === currentUser.username ? 
+            activeChat.user2_username : activeChat.user1_username;
+          
+          socket.emit('deleteMessageChat', selectedMessageForDelete, receiverUsername);
+          
+        } else if (currentView === 'groups' && activeGroup) {
+          socket.emit('deleteMessageGroup', selectedMessageForDelete);
+        }
       }
+      selectedMessageForDelete = null;
     }
+  );
 
-    async function makeAuthenticatedRequest(url, options = {}) {
-      try {
-        const response = await fetch(url, {
+  document.querySelectorAll('.message-menu-content.show').forEach(menu => {
+    menu.classList.remove('show');
+  });
+};
+
+// FUNCIÓN CORREGIDA PARA EXPULSAR USUARIOS - SOLUCIONANDO EL ERROR DE userId UNDEFINED
+window.expelUser = function(userId, username) {
+  if (!activeGroup || !socket || currentUserRole !== 'Admin') {
+    showNotification('Solo los administradores pueden expulsar usuarios', 'error');
+    return;
+  }
+  
+  // VALIDACIÓN MEJORADA PARA ASEGURAR QUE userId NO SEA UNDEFINED
+  if (!userId || userId === 'undefined' || userId === undefined) {
+    console.error('Error: userId es undefined o inválido', { userId, username });
+    showNotification('Error: No se pudo identificar al usuario', 'error');
+    return;
+  }
+  
+  console.log('Datos para expulsión validados:', {
+    userId: userId,
+    username: username,
+    currentUserRole: currentUserRole,
+    activeGroupId: activeGroup.id,
+    userIdType: typeof userId
+  });
+  
+  showConfirmDialog(
+    '¿Expulsar usuario?',
+    `¿Estás seguro de que quieres expulsar a ${username} del grupo? Esta acción no se puede deshacer.`,
+    () => {
+      console.log(`Expulsando usuario ${username} (${userId}) del grupo ${activeGroup.id}`);
+      
+      // ENVIAR DATOS VALIDADOS AL SERVIDOR
+      socket.emit('expelUser', String(userId), currentUserRole, activeGroup.id);
+      
+      showNotification(`Expulsando a ${username}...`, 'info');
+      showRealtimeIndicator();
+    }
+  );
+};
+
+// Función para mostrar indicador de tiempo real
+function showRealtimeIndicator() {
+  realtimeIndicator.classList.add('show');
+  
+  if (realtimeUpdateTimeout) {
+    clearTimeout(realtimeUpdateTimeout);
+  }
+  
+  realtimeUpdateTimeout = setTimeout(() => {
+    realtimeIndicator.classList.remove('show');
+  }, 2000);
+}
+
+// FUNCIÓN PRINCIPAL PARA RE-RENDERIZAR TODO COMPLETAMENTE
+function fullRefresh(reason = 'update') {
+  if (isRefreshing) {
+    console.log('Ya hay un refresh en progreso, saltando...');
+    return;
+  }
+  
+  isRefreshing = true;
+  console.log(`🔄 Iniciando refresh completo por: ${reason}`);
+  showRealtimeIndicator();
+  
+  // Guardar estado actual
+  const currentActiveChat = activeChat;
+  const currentActiveGroup = activeGroup;
+  const currentScrollPosition = chatMessages.scrollTop;
+  const wasAtBottom = chatMessages.scrollTop >= (chatMessages.scrollHeight - chatMessages.clientHeight - 50);
+  
+  if (socket && socketConnected) {
+    // 1. ACTUALIZAR LISTAS DE CHATS Y GRUPOS
+    console.log('📋 Actualizando listas de chats y grupos...');
+    socket.emit('allChats');
+    socket.emit('allGroups');
+    
+    // 2. ACTUALIZAR MENSAJES DEL CHAT/GRUPO ACTIVO
+    if (currentActiveChat && currentView === 'chats') {
+      console.log('💬 Actualizando mensajes del chat activo:', currentActiveChat.id);
+      socket.emit('joinChat', currentActiveChat.id, 50, 0);
+    }
+    
+    if (currentActiveGroup && currentView === 'groups') {
+      console.log('👥 Actualizando mensajes del grupo activo:', currentActiveGroup.id);
+      socket.emit('joinGroup', currentActiveGroup.id, 50, 0);
+      socket.emit('usersGroup', currentActiveGroup.id);
+    }
+    
+    // 3. AÑADIR ANIMACIONES DE REFRESH
+    setTimeout(() => {
+      // Animar elementos de la lista
+      document.querySelectorAll('.chat-item').forEach(item => {
+        item.classList.add('refreshing');
+        setTimeout(() => item.classList.remove('refreshing'), 800);
+      });
+      
+      // Animar mensajes
+      document.querySelectorAll('.message:not(.system-message)').forEach(msg => {
+        msg.classList.add('message-refreshing');
+        setTimeout(() => msg.classList.remove('message-refreshing'), 600);
+      });
+      
+      // Restaurar posición de scroll si es necesario
+      if (wasAtBottom) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      } else {
+        chatMessages.scrollTop = currentScrollPosition;
+      }
+      
+      isRefreshing = false;
+      console.log('✅ Refresh completo finalizado');
+    }, 300);
+  } else {
+    isRefreshing = false;
+  }
+}
+
+// FUNCIÓN MEJORADA PARA ACTUALIZAR LISTAS Y MENSAJES AUTOMÁTICAMENTE
+function updateListsAutomatically(reason = 'auto') {
+  console.log(`🔄 Actualizando listas automáticamente por: ${reason}`);
+  fullRefresh(reason);
+}
+
+// Funciones de utilidad
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => notification.classList.add('show'), 100);
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => document.body.removeChild(notification), 300);
+  }, 3000);
+}
+
+function showLoading() {
+  loading.style.display = 'block';
+  authContainer.style.display = 'none';
+  chatContainer.style.display = 'none';
+}
+
+function showAuth() {
+  loading.style.display = 'none';
+  authContainer.style.display = 'flex';
+  chatContainer.style.display = 'none';
+  
+  regErrorMessage.style.display = 'none';
+  loginErrorMessage.style.display = 'none';
+}
+
+function showChat(user) {
+  loading.style.display = 'none';
+  authContainer.style.display = 'none';
+  chatContainer.style.display = 'block';
+  
+  currentUser = user;
+  userName.textContent = user.username || 'Usuario';
+  userEmail.textContent = user.email || '';
+  userAvatar.textContent = (user.username || 'U').charAt(0).toUpperCase();
+  
+  initializeSocket();
+}
+
+function showError(element, message) {
+  if (element && message) {
+    element.textContent = message;
+    element.style.display = 'block';
+  }
+}
+
+function hideError(element) {
+  if (element) {
+    element.textContent = '';
+    element.style.display = 'none';
+  }
+}
+
+function updateConnectionStatus(status) {
+  connectionStatus.textContent = status;
+  connectionStatus.className = 'connection-status';
+  
+  switch(status.toLowerCase()) {
+    case 'conectado':
+      connectionStatus.classList.add('connected');
+      break;
+    case 'desconectado':
+      connectionStatus.classList.add('disconnected');
+      break;
+    case 'conectando...':
+      connectionStatus.classList.add('connecting');
+      break;
+    default:
+      break;
+  }
+}
+
+function showConfirmDialog(title, message, callback) {
+  confirmTitle.textContent = title;
+  confirmMessage.textContent = message;
+  confirmCallback = callback;
+  confirmDialog.style.display = 'flex';
+}
+
+function hideConfirmDialog() {
+  confirmDialog.style.display = 'none';
+  confirmCallback = null;
+}
+
+async function makeAuthenticatedRequest(url, options = {}) {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include'
+    });
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        return await fetch(url, {
           ...options,
           credentials: 'include'
         });
-
-        if (response.status === 401) {
-          // Token expirado, intentar refresh
-          const refreshSuccess = await refreshToken();
-          if (refreshSuccess) {
-            // Reintentar la petición original
-            return await fetch(url, {
-              ...options,
-              credentials: 'include'
-            });
-          } else {
-            throw new Error('Token expired');
-          }
-        }
-
-        return response;
-      } catch (error) {
-        console.error('Error en petición autenticada:', error);
-        throw error;
+      } else {
+        throw new Error('Token expired');
       }
     }
 
-    async function refreshToken() {
-      try {
-        const response = await fetch(`${API_BASE}/refresh`, {
-          method: 'POST',
-          credentials: 'include'
-        });
+    return response;
+  } catch (error) {
+    console.error('Error en petición autenticada:', error);
+    throw error;
+  }
+}
 
-        if (response.ok) {
-          showNotification('Sesión renovada automáticamente', 'info');
-          return true;
-        } else {
-          handleLogout();
-          return false;
-        }
-      } catch (error) {
-        console.error('Error al renovar token:', error);
-        handleLogout();
-        return false;
-      }
+async function refreshToken() {
+  try {
+    const response = await fetch(`${API_BASE}/refresh`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+
+    if (response.ok) {
+      showNotification('Sesión renovada automáticamente', 'info');
+      return true;
+    } else {
+      handleLogout();
+      return false;
     }
+  } catch (error) {
+    console.error('Error al renovar token:', error);
+    handleLogout();
+    return false;
+  }
+}
 
-    async function checkAuthStatus() {
-      try {
-        const response = await fetch(`${API_BASE}/me`, {
-          method: 'GET',
-          credentials: 'include'
-        });
+async function checkAuthStatus() {
+  try {
+    const response = await fetch(`${API_BASE}/me`, {
+      method: 'GET',
+      credentials: 'include'
+    });
 
-        if (response.ok) {
-          const userData = await response.json();
-          showChat(userData);
-        } else if (response.status === 401) {
-          // Intentar refresh
-          const refreshSuccess = await refreshToken();
-          if (!refreshSuccess) {
-            showAuth();
-          }
-        } else {
-          showAuth();
-        }
-      } catch (error) {
-        console.error('Error al verificar autenticación:', error);
+    if (response.ok) {
+      const userData = await response.json();
+      showChat(userData);
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (!refreshSuccess) {
         showAuth();
       }
-    }
-
-    function handleLogout() {
-      // Si había un grupo activo, salir automáticamente ANTES de limpiar
-      if (activeGroup && socket) {
-        console.log('Saliendo automáticamente del grupo al hacer logout:', activeGroup.id);
-        socket.emit('leaveGroupForMoment');
-      }
-      
-      currentUser = null;
-      activeChat = null;
-      activeGroup = null;
-      chats = [];
-      groups = [];
-      unreadMessages = {};
-      unreadGroupMessages = {};
-      typingUsers = {};
-      processedMessages.clear();
-      pendingMessages.clear();
-      
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
-      
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-        reconnectTimer = null;
-      }
-      
-      updateConnectionStatus('Desconectado');
+    } else {
       showAuth();
     }
+  } catch (error) {
+    console.error('Error al verificar autenticación:', error);
+    showAuth();
+  }
+}
 
-    function attemptReconnect() {
-      if (reconnectAttempts >= maxReconnectAttempts) {
-        console.log('Máximo de intentos de reconexión alcanzado');
-        updateConnectionStatus('Desconectado');
-        showNotification('No se pudo reconectar al servidor. Por favor, recarga la página.', 'error');
-        return;
-      }
-      
-      reconnectAttempts++;
-      updateConnectionStatus(`Conectando... (Intento ${reconnectAttempts}/${maxReconnectAttempts})`);
-      
-      console.log(`Intentando reconectar (${reconnectAttempts}/${maxReconnectAttempts})...`);
-      
-      // Reiniciar socket
-      initializeSocket();
-      
-      // Programar próximo intento si este falla
-      reconnectTimer = setTimeout(() => {
-        if (socket && socket.connected) {
-          console.log('Reconexión exitosa');
-          reconnectAttempts = 0;
-          updateConnectionStatus('Conectado');
-        } else {
-          attemptReconnect();
-        }
-      }, reconnectInterval);
+function handleLogout() {
+  if (activeGroup && socket) {
+    console.log('Saliendo automáticamente del grupo al hacer logout:', activeGroup.id);
+    socket.emit('leaveGroupForMoment');
+  }
+  
+  currentUser = null;
+  activeChat = null;
+  activeGroup = null;
+  chats = [];
+  groups = [];
+  unreadMessages = {};
+  unreadGroupMessages = {};
+  typingUsers = {};
+  processedMessages.clear();
+  pendingMessages.clear();
+  currentUserRole = 'User';
+  groupUsers = [];
+  socketConnected = false;
+  lastMessageTimestamps = {};
+  isRefreshing = false;
+  
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  
+  updateConnectionStatus('Desconectado');
+  showAuth();
+}
+
+function attemptReconnect() {
+  if (reconnectAttempts >= maxReconnectAttempts) {
+    console.log('Máximo de intentos de reconexión alcanzado');
+    updateConnectionStatus('Desconectado');
+    showNotification('No se pudo reconectar al servidor. Por favor, recarga la página.', 'error');
+    return;
+  }
+  
+  reconnectAttempts++;
+  updateConnectionStatus(`Conectando... (Intento ${reconnectAttempts}/${maxReconnectAttempts})`);
+  
+  console.log(`Intentando reconectar (${reconnectAttempts}/${maxReconnectAttempts})...`);
+  
+  initializeSocket();
+  
+  reconnectTimer = setTimeout(() => {
+    if (socket && socket.connected) {
+      console.log('Reconexión exitosa');
+      reconnectAttempts = 0;
+      updateConnectionStatus('Conectado');
+    } else {
+      attemptReconnect();
     }
+  }, reconnectInterval);
+}
 
-    function initializeSocket() {
-      // Desconectar socket anterior si existe
-      if (socket) {
-        socket.disconnect();
-      }
-
-      console.log('Inicializando WebSocket...');
-      updateConnectionStatus('Conectando...');
+// FUNCIÓN MEJORADA PARA ACTUALIZAR CHAT ITEM CON ÚLTIMO MENSAJE
+function updateChatItemPreview(chatId, lastMessage, isGroup = false) {
+  const selector = isGroup ? `[data-group-id="${chatId}"]` : `[data-chat-id="${chatId}"]`;
+  const chatItem = document.querySelector(selector);
+  
+  if (chatItem) {
+    const previewElement = chatItem.querySelector('.chat-item-preview');
+    if (previewElement && lastMessage) {
+      const truncatedMessage = lastMessage.length > 30 ? lastMessage.substring(0, 30) + '...' : lastMessage;
+      previewElement.textContent = truncatedMessage;
       
-      socket = io("http://localhost:3000", { 
-        withCredentials: true,
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        timeout: 20000
-      });
+      // Añadir animación de nuevo mensaje
+      chatItem.classList.add('new-message');
+      setTimeout(() => {
+        chatItem.classList.remove('new-message');
+      }, 2000);
+    }
+  }
+}
 
-      socket.on('connect', () => {
-        console.log('Conectado al WebSocket');
-        updateConnectionStatus('Conectado');
-        reconnectAttempts = 0;
-        
-        if (reconnectTimer) {
-          clearTimeout(reconnectTimer);
-          reconnectTimer = null;
-        }
-        
-        addSystemMessage('Conectado al chat en tiempo real');
-        
-        // Solicitar chats y grupos al conectar
-        socket.emit('allChats');
-        socket.emit('allGroups');
-        
-        // Forzar actualizaciones periódicas para mantener sincronización
-        setInterval(() => {
-          if (socket && socket.connected) {
-            socket.emit('allChats');
-            socket.emit('allGroups');
+// FUNCIÓN MEJORADA PARA RENDERIZAR USUARIOS DEL GRUPO CON VALIDACIÓN DE IDs
+function renderGroupUsersInline() {
+  if (!groupUsers || groupUsers.length === 0) {
+    groupUsersListInline.innerHTML = '<div style="text-align: center; color: #666; font-size: 0.8rem;">No hay usuarios</div>';
+    usersCount.textContent = '0';
+    return;
+  }
+  
+  usersCount.textContent = groupUsers.length;
+  groupUsersListInline.innerHTML = '';
+  
+  groupUsers.forEach(user => {
+    // VALIDACIÓN MEJORADA DE DATOS DE USUARIO
+    const username = user.username || user.user_username || user.name || 'Usuario desconocido';
+    const userId = user.user_id || user.id;
+    const userRole = user.role || 'User';
+    
+    // VALIDAR QUE userId NO SEA UNDEFINED
+    if (!userId || userId === 'undefined' || userId === undefined) {
+      console.warn('Usuario con ID inválido ignorado:', user);
+      return;
+    }
+    
+    const userItem = document.createElement('div');
+    userItem.className = 'group-user-item';
+    
+    userItem.innerHTML = `
+      <div class="group-user-info">
+        <div class="group-user-avatar">${username.charAt(0).toUpperCase()}</div>
+        <span>${username}</span>
+        ${userRole === 'Admin' ? '<span class="admin-badge">Admin</span>' : ''}
+      </div>
+      <div class="group-user-actions">
+        ${username !== currentUser.username && currentUserRole === 'Admin' ? `
+          <button class="btn-mini btn-danger" onclick="expelUser('${userId}', '${username}')">
+            Expulsar
+          </button>
+        ` : ''}
+      </div>
+    `;
+    
+    groupUsersListInline.appendChild(userItem);
+  });
+}
+
+function initializeSocket() {
+  if (socket) {
+    socket.disconnect();
+  }
+
+  console.log('Inicializando WebSocket...');
+  updateConnectionStatus('Conectando...');
+  socketConnected = false;
+  
+  socket = io("https://chat-en-tiempo-real-hl51.onrender.com", { 
+    withCredentials: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000
+  });
+
+  socket.on('connect', () => {
+    console.log('Conectado al WebSocket');
+    updateConnectionStatus('Conectado');
+    reconnectAttempts = 0;
+    socketConnected = true;
+    
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    
+    addSystemMessage('Conectado al chat en tiempo real');
+    showRealtimeIndicator();
+    
+    // SOLICITAR DATOS INICIALES INMEDIATAMENTE
+    fullRefresh('conexión inicial');
+    
+    if (activeChat && currentView === 'chats') {
+      console.log('Reconectando al chat activo:', activeChat.id);
+      socket.emit('joinChat', activeChat.id, 50, 0);
+      messageInput.disabled = false;
+      sendBtn.disabled = false;
+    } else if (activeGroup && currentView === 'groups') {
+      console.log('Reconectando al grupo activo:', activeGroup.id);
+      socket.emit('joinGroup', activeGroup.id, 50, 0);
+      messageInput.disabled = false;
+      sendBtn.disabled = false;
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Desconectado del WebSocket');
+    updateConnectionStatus('Desconectado');
+    addSystemMessage('Desconectado del chat');
+    socketConnected = false;
+    
+    messageInput.disabled = true;
+    sendBtn.disabled = true;
+    
+    if (!reconnectTimer) {
+      reconnectTimer = setTimeout(() => attemptReconnect(), reconnectInterval);
+    }
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Error de conexión WebSocket:', error);
+    updateConnectionStatus('Error de conexión');
+    socketConnected = false;
+    
+    if (reconnectAttempts === 0) {
+      addSystemMessage('Error de conexión al chat');
+    }
+  });
+
+  // EVENTOS DE CHATS CON RE-RENDERIZADO COMPLETO
+  socket.on('allChats', (data) => {
+    console.log('📨 Chats recibidos:', data);
+    
+    if (data && Array.isArray(data)) {
+      chats = data.filter(chat => 
+        chat && 
+        chat.id && 
+        chat.user1_username && 
+        chat.user2_username &&
+        chat.user1_username.trim() !== '' &&
+        chat.user2_username.trim() !== '' &&
+        chat.user1_username !== 'undefined' &&
+        chat.user2_username !== 'undefined'
+      );
+    } else if (data && data.id && data.user1_username && data.user2_username) {
+      chats = [data];
+    } else {
+      chats = [];
+    }
+    
+    console.log('Chats procesados:', chats);
+    
+    if (currentView === 'chats') {
+      renderChatList(chats);
+    }
+  });
+
+  socket.on('messagesChat', (messages) => {
+    console.log('💬 Mensajes de chat recibidos:', messages);
+    if (messages && Array.isArray(messages)) {
+      renderMessages(messages, 'chat');
+    }
+  });
+
+  socket.on('createChat', (newChat) => {
+    console.log('✨ Nuevo chat creado:', newChat);
+    showNotification('Chat creado correctamente', 'success');
+    fullRefresh('nuevo chat creado');
+  });
+
+  socket.on('newChatCreated', (data) => {
+    console.log('📢 Nuevo chat recibido:', data);
+    showNotification(`Nuevo chat creado con ${data.creatorUsername || 'un usuario'}`, 'info');
+    fullRefresh('chat creado por otro usuario');
+  });
+
+  socket.on('userAddedToChat', (data) => {
+    console.log('👤 Usuario agregado a chat:', data);
+    
+    showNotification(`Has sido agregado a un chat con ${data.otherUsername || 'un usuario'}`, 'info');
+    
+    // RE-RENDERIZADO COMPLETO INMEDIATO
+    fullRefresh('agregado a chat');
+  });
+
+  socket.on('sendMessageChat', (data) => {
+    console.log('📨 Mensaje de chat recibido:', data);
+    if (data && data.message && data.usernameSender) {
+      if (data.usernameSender === currentUser.username) {
+        const tempMessages = document.querySelectorAll('[data-is-temporary="true"]');
+        for (let tempMsg of tempMessages) {
+          const contentElement = tempMsg.querySelector('.message-content');
+          if (contentElement && contentElement.textContent === data.message) {
+            const tempId = tempMsg.dataset.messageId;
+            updateTemporaryMessageId(tempId, data.id || data.messageId, data.message);
+            break;
           }
-        }, 30000); // Cada 30 segundos
-        
-        // Si hay un chat o grupo activo, volver a unirse
-        if (activeChat && currentView === 'chats') {
-          console.log('Reconectando al chat activo:', activeChat.id);
-          socket.emit('joinChat', activeChat.id, 50, 0);
-          messageInput.disabled = false;
-          sendBtn.disabled = false;
-        } else if (activeGroup && currentView === 'groups') {
-          console.log('Reconectando al grupo activo:', activeGroup.id);
-          socket.emit('joinGroup', activeGroup.id, 50, 0);
-          messageInput.disabled = false;
-          sendBtn.disabled = false;
         }
-      });
-
-      socket.on('disconnect', () => {
-        console.log('Desconectado del WebSocket');
-        updateConnectionStatus('Desconectado');
-        addSystemMessage('Desconectado del chat');
+      } else {
+        handleIncomingChatMessage(data);
         
-        // Deshabilitar chat cuando esté desconectado
+        // ACTUALIZAR PREVIEW DEL CHAT EN LA LISTA
+        const chatId = data.chatId || findChatIdByUsers(data.usernameSender, currentUser.username);
+
+        if (chatId) {
+          updateChatItemPreview(chatId, data.message, false);
+        }
+        
+        // RE-RENDERIZADO COMPLETO PARA SINCRONIZAR TODO
+        setTimeout(() => fullRefresh('nuevo mensaje de chat'), 500);
+      }
+    }
+  });
+
+  socket.on('typingChat', (data) => {
+    console.log('⌨️ Evento typing chat recibido:', data);
+    if (data) {
+      handleTypingChat(data);
+    }
+  });
+
+  // EVENTOS DE GRUPOS CON RE-RENDERIZADO COMPLETO
+  socket.on('allGroups', (data) => {
+    console.log('👥 Grupos recibidos:', data);
+    
+    if (data && Array.isArray(data)) {
+      groups = data.filter(group => 
+        group && 
+        group.id && 
+        group.name &&
+        group.name.trim() !== '' &&
+        group.name !== 'undefined'
+      );
+    } else if (data && data.id && data.name) {
+      groups = [data];
+    } else {
+      groups = [];
+    }
+    
+    console.log('Grupos procesados:', groups);
+    
+    if (currentView === 'groups') {
+      renderGroupList(groups);
+    }
+  });
+
+  socket.on('messagesGroup', (messages) => {
+    console.log('👥💬 Mensajes de grupo recibidos:', messages);
+    if (messages && Array.isArray(messages)) {
+      renderMessages(messages, 'group');
+    }
+  });
+
+  socket.on('createGroup', (newGroup) => {
+    console.log('✨ Nuevo grupo creado:', newGroup);
+    showNotification('Grupo creado correctamente', 'success');
+    fullRefresh('nuevo grupo creado');
+  });
+
+  socket.on('sendMessageGroup', (data) => {
+    console.log('👥📨 Mensaje de grupo recibido:', data);
+    if (data && data.message) {
+      if ((data.usernameSender || data.username) === currentUser.username) {
+        const tempMessages = document.querySelectorAll('[data-is-temporary="true"]');
+        for (let tempMsg of tempMessages) {
+          const contentElement = tempMsg.querySelector('.message-content');
+          if (contentElement && contentElement.textContent === data.message) {
+            const tempId = tempMsg.dataset.messageId;
+            updateTemporaryMessageId(tempId, data.id || data.messageId, data.message);
+            break;
+          }
+        }
+      } else {
+        handleIncomingGroupMessage(data, 'sendMessageGroup');
+        
+        // ACTUALIZAR PREVIEW DEL GRUPO EN LA LISTA
+        const groupId = data.groupId || data.group_id || (activeGroup ? activeGroup.id : null);
+        if (groupId) {
+          updateChatItemPreview(groupId, data.message, true);
+        }
+        
+        // RE-RENDERIZADO COMPLETO PARA SINCRONIZAR TODO
+        setTimeout(() => fullRefresh('nuevo mensaje de grupo'), 500);
+      }
+    }
+  });
+
+  socket.on('typingGroup', (data) => {
+    console.log('👥⌨️ Evento typing grupo recibido:', data);
+    if (data) {
+      handleTypingGroup(data);
+    }
+  });
+
+  socket.on('inviteGroup', (data) => {
+    console.log('📧 Invitación a grupo recibida:', data);
+    
+    showNotification('Has sido invitado a un grupo', 'info');
+    
+    // RE-RENDERIZADO COMPLETO INMEDIATO
+    fullRefresh('invitación a grupo');
+  });
+
+  // EVENTOS MEJORADOS PARA EDITAR/ELIMINAR MENSAJES CON RE-RENDERIZADO COMPLETO
+  
+  socket.on('editMessageChat', (data) => {
+    console.log('✏️ Mensaje de chat editado recibido del servidor:', data);
+    
+    if (data && (data.id || data.messageId)) {
+      if (data.editorUsername && data.editorUsername !== currentUser.username) {
+        showNotification(`${data.editorUsername} editó un mensaje`, 'info');
+      }
+      
+      // RE-RENDERIZADO COMPLETO INMEDIATO
+      fullRefresh('mensaje de chat editado');
+    }
+  });
+
+  socket.on('editMessageGroup', (data) => {
+    console.log('✏️ Mensaje de grupo editado recibido del servidor:', data);
+    
+    if (data && (data.id || data.messageId)) {
+      if (data.editorUsername && data.editorUsername !== currentUser.username) {
+        showNotification(`${data.editorUsername} editó un mensaje en el grupo`, 'info');
+      }
+      
+      // RE-RENDERIZADO COMPLETO INMEDIATO
+      fullRefresh('mensaje de grupo editado');
+    }
+  });
+
+  socket.on('deleteMessageChat', (data) => {
+    console.log('🗑️ Mensaje de chat eliminado recibido del servidor:', data);
+    
+    if (data && (data.id || data.messageId)) {
+      if (data.deleterUsername && data.deleterUsername !== currentUser.username) {
+        showNotification(`${data.deleterUsername} eliminó un mensaje`, 'info');
+      }
+      
+      // RE-RENDERIZADO COMPLETO INMEDIATO
+      fullRefresh('mensaje de chat eliminado');
+    }
+  });
+
+  socket.on('deleteMessageGroup', (data) => {
+    console.log('🗑️ Mensaje de grupo eliminado recibido del servidor:', data);
+    
+    if (data && (data.id || data.messageId)) {
+      if (data.deleterUsername && data.deleterUsername !== currentUser.username) {
+        showNotification(`${data.deleterUsername} eliminó un mensaje del grupo`, 'info');
+      }
+      
+      // RE-RENDERIZADO COMPLETO INMEDIATO
+      fullRefresh('mensaje de grupo eliminado');
+    }
+  });
+
+  socket.on('messageEdited', (data) => {
+    console.log('✏️ Mensaje editado (broadcast):', data);
+    if (data && (data.id || data.messageId)) {
+      // RE-RENDERIZADO COMPLETO INMEDIATO
+      fullRefresh('mensaje editado broadcast');
+    }
+  });
+
+  socket.on('messageDeleted', (data) => {
+    console.log('🗑️ Mensaje eliminado (broadcast):', data);
+    if (data && (data.id || data.messageId)) {
+      // RE-RENDERIZADO COMPLETO INMEDIATO
+      fullRefresh('mensaje eliminado broadcast');
+    }
+  });
+
+  // EVENTO PARA ELIMINAR CHAT CON RE-RENDERIZADO COMPLETO
+  socket.on('deleteChat', (deletedChat) => {
+    console.log('🗑️ Chat eliminado en tiempo real:', deletedChat);
+    showNotification('Chat eliminado', 'info');
+    setTimeout(() => fullRefresh('chat eliminado'), 300);
+  });
+
+  // EVENTO PARA ELIMINAR GRUPO CON RE-RENDERIZADO COMPLETO
+  socket.on('deleteGroup', (deletedGroup) => {
+    console.log('🗑️ Grupo eliminado en tiempo real:', deletedGroup);
+    showNotification('Grupo eliminado', 'info');
+    setTimeout(() => fullRefresh('grupo eliminado'), 300);
+  });
+
+  // EVENTO PARA EDITAR GRUPO CON RE-RENDERIZADO COMPLETO
+  socket.on('editGroup', (editedGroup) => {
+    console.log('✏️ Grupo editado en tiempo real:', editedGroup);
+    
+    const groupIndex = groups.findIndex(g => g.id === editedGroup.id);
+    if (groupIndex !== -1) {
+      groups[groupIndex] = { ...groups[groupIndex], ...editedGroup };
+    }
+    
+    if (activeGroup && activeGroup.id === editedGroup.id) {
+      activeGroup = { ...activeGroup, ...editedGroup };
+    }
+    
+    showNotification(`Grupo "${editedGroup.name || editedGroup.newName}" ha sido editado`, 'info');
+    
+    // RE-RENDERIZADO COMPLETO DESPUÉS DE EDITAR
+    fullRefresh('grupo editado');
+  });
+
+  // EVENTO PARA EXPULSAR USUARIOS CON RE-RENDERIZADO COMPLETO
+  socket.on('expelUser', (data) => {
+    console.log('👤🚫 Usuario expulsado:', data);
+    
+    if (data.userId === currentUser.id || data.user_id === currentUser.id) {
+      showNotification('Has sido expulsado del grupo', 'error');
+      
+      if (activeGroup && activeGroup.id === data.groupId) {
+        activeGroup = null;
+        groupUsers = [];
+        chatMessages.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">👋</div>
+            <p>Has sido expulsado del grupo</p>
+            <p>Selecciona otro grupo o crea uno nuevo</p>
+          </div>
+        `;
+        chatInfoHeader.classList.remove('show');
+        groupUsersSection.classList.remove('show');
         messageInput.disabled = true;
         sendBtn.disabled = true;
-        
-        // Intentar reconectar automáticamente
-        if (!reconnectTimer) {
-          reconnectTimer = setTimeout(() => attemptReconnect(), reconnectInterval);
-        }
-      });
+      }
+      
+      // RE-RENDERIZADO COMPLETO DESPUÉS DE EXPULSIÓN
+      fullRefresh('expulsado del grupo');
+    } else {
+      const expelledUsername = data.username || 'Usuario';
+      showNotification(`${expelledUsername} ha sido expulsado del grupo`, 'info');
+      
+      // RE-RENDERIZADO COMPLETO PARA ACTUALIZAR LISTA DE USUARIOS
+      fullRefresh('usuario expulsado');
+    }
+  });
 
-      socket.on('connect_error', (error) => {
-        console.error('Error de conexión WebSocket:', error);
-        updateConnectionStatus('Error de conexión');
-        
-        // No mostrar mensaje de sistema para evitar spam
-        if (reconnectAttempts === 0) {
-          addSystemMessage('Error de conexión al chat');
-        }
-      });
+  socket.on('userExpelled', (data) => {
+    console.log('✅ Confirmación de expulsión:', data);
+    showNotification(`Usuario ${data.username} expulsado exitosamente`, 'success');
+    
+    // RE-RENDERIZADO COMPLETO DESPUÉS DE CONFIRMACIÓN
+    fullRefresh('confirmación expulsión');
+  });
 
-      // Eventos de chats individuales
-      socket.on('allChats', (data) => {
-        console.log('Chats recibidos:', data);
-        
-        // Procesar datos de chats con validación básica pero menos restrictiva
-        if (data && Array.isArray(data)) {
-          chats = data.filter(chat => 
-            chat && 
-            chat.id && 
-            chat.user1_username && 
-            chat.user2_username &&
-            chat.user1_username.trim() !== '' &&
-            chat.user2_username.trim() !== '' &&
-            chat.user1_username !== 'undefined' &&
-            chat.user2_username !== 'undefined'
-          );
-        } else if (data && data.id && data.user1_username && data.user2_username) {
-          chats = [data];
-        } else {
-          chats = [];
-        }
-        
-        console.log('Chats procesados:', chats);
-        
-        if (currentView === 'chats') {
-          renderChatList(chats);
-        }
-      });
+  socket.on('error_message', (err) => {
+    console.error('❌ Error del servidor:', err);
+    if (err && err.message && !err.message.includes('escribiendo')) {
+      showNotification(err.message || 'Error en el servidor', 'error');
+      
+      if (currentView === 'groups' && activeGroup) {
+        switchView('groups');
+      }
+      
+      if (newChatModal.style.display === 'flex') {
+        showError(newChatErrorMessage, err.message || 'Error al crear el chat');
+      } else if (newGroupModal.style.display === 'flex') {
+        showError(newGroupErrorMessage, err.message || 'Error al crear el grupo');
+      } else if (inviteUsersModal.style.display === 'flex') {
+        showError(inviteUsersErrorMessage, err.message || 'Error al invitar usuarios');
+      } else if (editMessageModal.style.display === 'flex') {
+        showError(editMessageErrorMessage, err.message || 'Error al editar el mensaje');
+      } else if (editGroupModal.style.display === 'flex') {
+        showError(editGroupErrorMessage, err.message || 'Error al editar el grupo');
+      }
+    }
+  });
 
-      socket.on('messagesChat', (messages) => {
-        console.log('Mensajes de chat recibidos:', messages);
-        if (messages && Array.isArray(messages)) {
-          renderMessages(messages, 'chat');
-        }
-      });
+  socket.on('userAddedToGroup', (data) => {
+    console.log('👤➕ Usuario agregado a grupo:', data);
+    
+    showNotification(`Has sido agregado al grupo: ${data.groupName || 'Nuevo grupo'}`, 'info');
+    
+    // RE-RENDERIZADO COMPLETO INMEDIATO
+    fullRefresh('agregado a grupo');
+  });
 
-      socket.on('createChat', (newChat) => {
-        console.log('Nuevo chat creado:', newChat);
-        if (newChat && newChat.id) {
-          showNotification('Chat creado correctamente', 'success');
+  // EVENTO MEJORADO PARA USUARIOS DEL GRUPO CON RE-RENDERIZADO
+  socket.on('usersGroup', (users) => {
+    console.log('👥 Usuarios del grupo recibidos:', users);
+    
+    if (users && Array.isArray(users)) {
+      // FILTRAR USUARIOS CON IDs VÁLIDOS
+      groupUsers = users.filter(user => {
+        const userId = user.user_id || user.id;
+        const username = user.username || user.user_username || user.name;
+        
+        return userId && userId !== 'undefined' && userId !== undefined && 
+               username && username !== 'undefined' && username !== undefined;
+      });
+      
+      console.log('Usuarios del grupo filtrados:', groupUsers);
+      
+      const currentUserInGroup = groupUsers.find(user => 
+        user.user_id === currentUser.id || 
+        user.id === currentUser.id ||
+        user.username === currentUser.username
+      );
+      
+      if (currentUserInGroup) {
+        currentUserRole = currentUserInGroup.role || 'User';
+        console.log('Rol del usuario actual en el grupo:', currentUserRole);
+        
+        updateChatInfo();
+      }
+      
+      // Actualizar lista inline de usuarios
+      renderGroupUsersInline();
+    }
+  });
+
+  socket.on('groupUsers', (users) => {
+    console.log('👥 Usuarios del grupo recibidos (groupUsers):', users);
+    if (users && Array.isArray(users)) {
+      // FILTRAR USUARIOS CON IDs VÁLIDOS
+      groupUsers = users.filter(user => {
+        const userId = user.user_id || user.id;
+        const username = user.username || user.user_username || user.name;
+        
+        return userId && userId !== 'undefined' && userId !== undefined && 
+               username && username !== 'undefined' && username !== undefined;
+      });
+      
+      renderGroupUsersInline();
+    }
+  });
+}
+
+// FUNCIÓN AUXILIAR PARA ENCONTRAR CHAT ID POR USUARIOS
+function findChatIdByUsers(user1, user2) {
+  const chat = chats.find(c => 
+    (c.user1_username === user1 && c.user2_username === user2) ||
+    (c.user1_username === user2 && c.user2_username === user1)
+  );
+  return chat ? chat.id : null;
+}
+
+function generateMessageId(data) {
+  const sender = data.usernameSender || data.username || data.sender || 'unknown';
+  const message = data.message || data.content || data.text || '';
+  const timestamp = data.date || data.created_at || data.timestamp || Date.now();
+  
+  return `${sender}_${message}_${timestamp}`;
+}
+
+function handleIncomingChatMessage(data) {
+  console.log('📨 Procesando mensaje de chat:', data);
+  
+  if (!data || !data.message || !data.usernameSender) {
+    console.log('Mensaje de chat inválido ignorado:', data);
+    return;
+  }
+  
+  const isOutgoing = data.usernameSender === currentUser.username;
+  const senderName = data.usernameSender;
+  
+  console.log('Mensaje de chat - Remitente:', senderName, 'Es propio:', isOutgoing);
+  
+  if (isOutgoing) {
+    console.log('Mensaje propio ignorado para evitar duplicación');
+    return;
+  }
+  
+  const messageId = generateMessageId(data);
+  
+  if (processedMessages.has(messageId)) {
+    console.log('Mensaje duplicado ignorado:', messageId);
+    return;
+  }
+  
+  processedMessages.add(messageId);
+  
+  let messageChatId = null;
+  
+  if (data.chatId) {
+    messageChatId = data.chatId;
+  } else {
+    const chat = chats.find(c => 
+      (c.user1_username === data.usernameSender && c.user2_username === currentUser.username) ||
+      (c.user2_username === data.usernameSender && c.user1_username === currentUser.username) ||
+      (c.user1_username === currentUser.username && c.user2_username === data.usernameReceiver) ||
+      (c.user2_username === currentUser.username && c.user1_username === data.usernameReceiver)
+    );
+    if (chat) {
+      messageChatId = chat.id;
+    }
+  }
+  
+  if (activeChat && messageChatId && activeChat.id === messageChatId && currentView === 'chats') {
+    addMessage(senderName, data.message, new Date(data.date), false, 'chat');
+    showRealtimeIndicator();
+  } else if (messageChatId) {
+    if (!unreadMessages[messageChatId]) {
+      unreadMessages[messageChatId] = 0;
+    }
+    unreadMessages[messageChatId]++;
+    
+    updateUnreadBadge(messageChatId, 'chat');
+    
+    showNotification(`Nuevo mensaje de ${senderName}: ${data.message}`, 'message');
+    
+    if (Notification.permission === 'granted') {
+      try {
+        const notification = new Notification(`Nuevo mensaje de ${senderName}`, {
+          body: data.message,
+          icon: '/favicon.ico',
+          tag: `chat-${messageChatId}`,
+          requireInteraction: false,
+          silent: false
+        });
+        
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+        
+        notification.onclick = function() {
+          window.focus();
           
-          // Cambiar automáticamente a la vista de chats si no estamos ahí
           if (currentView !== 'chats') {
             switchView('chats');
           }
           
-          // Actualizar la lista de chats inmediatamente
-          socket.emit('allChats');
-          
-          // Actualizar nuevamente después de un delay para asegurar sincronización
           setTimeout(() => {
-            socket.emit('allChats');
-          }, 500);
-        }
-      });
-
-      // Nuevo evento para cuando alguien más crea un chat contigo
-      socket.on('newChatCreated', (data) => {
-        console.log('Nuevo chat recibido:', data);
-        
-        // Mostrar notificación
-        showNotification(`Nuevo chat creado con ${data.creatorUsername || 'un usuario'}`, 'info');
-        
-        // Actualizar la lista de chats inmediatamente
-        socket.emit('allChats');
-        
-        // Si estamos en la vista de chats, actualizar la interfaz inmediatamente
-        if (currentView === 'chats') {
-          setTimeout(() => {
-            socket.emit('allChats');
-            renderChatList(chats);
-          }, 200);
-        }
-        
-        // Actualizar nuevamente después de un delay más largo para asegurar sincronización
-        setTimeout(() => {
-          socket.emit('allChats');
-          if (currentView === 'chats') {
-            renderChatList(chats);
-          }
-        }, 1000);
-      });
-
-      // Evento para cuando te agregan a un chat
-      socket.on('userAddedToChat', (data) => {
-        console.log('Usuario agregado a chat:', data);
-        
-        // Mostrar notificación
-        showNotification(`Has sido agregado a un chat con ${data.otherUsername || 'un usuario'}`, 'info');
-        
-        // Actualizar inmediatamente la lista de chats
-        socket.emit('allChats');
-        
-        // Si estamos en la vista de chats, renderizar inmediatamente
-        if (currentView === 'chats') {
-          setTimeout(() => {
-            renderChatList(chats);
+            const chatElement = document.querySelector(`[data-chat-id="${messageChatId}"]`);
+            if (chatElement) {
+              chatElement.click();
+            }
           }, 100);
-        }
-      });
-
-      socket.on('sendMessageChat', (data) => {
-        console.log('Mensaje de chat recibido:', data);
-        if (data && data.message && data.usernameSender) {
-          handleIncomingChatMessage(data);
-        }
-      });
-
-      socket.on('typingChat', (data) => {
-        console.log('Evento typing chat recibido:', data);
-        if (data) {
-          handleTypingChat(data);
-        }
-      });
-
-      // Eventos de grupos
-      socket.on('allGroups', (data) => {
-        console.log('Grupos recibidos:', data);
-        
-        // Procesar datos de grupos con validación básica pero menos restrictiva
-        if (data && Array.isArray(data)) {
-          groups = data.filter(group => 
-            group && 
-            group.id && 
-            group.name &&
-            group.name.trim() !== '' &&
-            group.name !== 'undefined'
-          );
-        } else if (data && data.id && data.name) {
-          groups = [data];
-        } else {
-          groups = [];
-        }
-        
-        console.log('Grupos procesados:', groups);
-        
-        // SIEMPRE renderizar si estamos en la vista de grupos
-        if (currentView === 'groups') {
-          renderGroupList(groups);
-        }
-      });
-
-      socket.on('messagesGroup', (messages) => {
-        console.log('Mensajes de grupo recibidos:', messages);
-        if (messages && Array.isArray(messages)) {
-          renderMessages(messages, 'group');
-        }
-      });
-
-      socket.on('createGroup', (newGroup) => {
-        console.log('Nuevo grupo creado:', newGroup);
-        if (newGroup && newGroup.id) {
-          showNotification('Grupo creado correctamente', 'success');
           
-          // Cambiar automáticamente a la vista de grupos
+          notification.close();
+        };
+        
+      } catch (error) {
+        console.error('Error al mostrar notificación del navegador:', error);
+      }
+    } else if (Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          console.log('Permisos de notificación concedidos');
+        }
+      });
+    }
+    
+    notificationSound.play().catch(e => console.log('Error al reproducir sonido:', e));
+  }
+  
+  setTimeout(() => {
+    processedMessages.delete(messageId);
+  }, 60000);
+}
+
+function handleIncomingGroupMessage(data, eventName = 'unknown') {
+  console.log(`👥📨 Procesando mensaje de grupo (evento ${eventName}):`, data);
+  
+  if (!data || !data.message) {
+    console.log('Mensaje de grupo inválido ignorado:', data);
+    return;
+  }
+  
+  let groupId = data.groupId || data.group_id || data.id;
+  let senderName = data.usernameSender || data.username || data.user || data.sender || 'Usuario desconocido';
+  let message = data.message || data.content || data.text;
+  let messageDate = data.date || data.created_at || data.timestamp || new Date();
+  
+  if (!senderName || senderName === 'undefined' || senderName.trim() === '') {
+    console.log('Mensaje de grupo con sender undefined ignorado:', data);
+    return;
+  }
+  
+  if (!groupId && activeGroup) {
+    groupId = activeGroup.id;
+    console.log('Usando ID del grupo activo:', groupId);
+  }
+  
+  const isOutgoing = senderName === currentUser.username;
+  
+  console.log('Mensaje de grupo - Remitente:', senderName, 'Es propio:', isOutgoing);
+  console.log('Datos extraídos:', { groupId, senderName, message, activeGroupId: activeGroup?.id, currentView });
+  
+  if (isOutgoing) {
+    console.log('Mensaje propio ignorado para evitar duplicación');
+    return;
+  }
+  
+  const messageId = `${eventName}_${senderName}_${message}_${groupId}_${messageDate}`;
+  
+  if (processedMessages.has(messageId)) {
+    console.log('Mensaje duplicado ignorado:', messageId);
+    return;
+  }
+  
+  processedMessages.add(messageId);
+  
+  const group = groups.find(g => g.id == groupId);
+  const groupName = group ? group.name : 'Grupo desconocido';
+  
+  const isInActiveGroup = activeGroup && groupId && activeGroup.id == groupId && currentView === 'groups';
+  
+  console.log('¿Estamos en el grupo activo?', isInActiveGroup, {
+    activeGroup: activeGroup?.id,
+    messageGroupId: groupId,
+    currentView,
+    comparison: activeGroup?.id == groupId
+  });
+  
+  if (isInActiveGroup) {
+    console.log('Mostrando mensaje en grupo activo de:', senderName);
+    
+    addMessage(senderName, message, new Date(messageDate), false, 'group');
+    showRealtimeIndicator();
+  } else if (groupId) {
+    console.log('Mensaje de grupo para notificación:', groupId, senderName, 'Grupo:', groupName);
+    
+    if (!unreadGroupMessages[groupId]) {
+      unreadGroupMessages[groupId] = 0;
+    }
+    unreadGroupMessages[groupId]++;
+    
+    updateUnreadBadge(groupId, 'group');
+    
+    showNotification(`Nuevo mensaje en ${groupName} de ${senderName}: ${message}`, 'message');
+    
+    if (Notification.permission === 'granted') {
+      try {
+        console.log('Creando notificación del navegador para grupo:', groupName);
+        const notification = new Notification(`Nuevo mensaje en ${groupName}`, {
+          body: `${senderName}: ${message}`,
+          icon: '/favicon.ico',
+          tag: `group-${groupId}`,
+          requireInteraction: false,
+          silent: false
+        });
+        
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+        
+        notification.onclick = function() {
+          window.focus();
+          
           if (currentView !== 'groups') {
             switchView('groups');
           }
           
-          // Actualizar la lista de grupos inmediatamente
-          socket.emit('allGroups');
-          
-          // Actualizar nuevamente después de un breve delay para asegurar sincronización
           setTimeout(() => {
-            socket.emit('allGroups');
-          }, 500);
-        }
-      });
-
-      socket.on('sendMessageGroup', (data) => {
-        console.log('Mensaje de grupo recibido:', data);
-        if (data && data.message) {
-          handleIncomingGroupMessage(data, 'sendMessageGroup');
-        }
-      });
-
-      socket.on('typingGroup', (data) => {
-        console.log('Evento typing grupo recibido:', data);
-        if (data) {
-          handleTypingGroup(data);
-        }
-      });
-
-      socket.on('inviteGroup', (data) => {
-        console.log('Invitación a grupo recibida:', data);
-        
-        // Mostrar notificación
-        showNotification('Has sido invitado a un grupo', 'info');
-        
-        // Actualizar la lista de grupos inmediatamente
-        socket.emit('allGroups');
-        
-        // Si estamos en la vista de grupos, actualizar la interfaz inmediatamente
-        if (currentView === 'groups') {
-          setTimeout(() => {
-            socket.emit('allGroups');
-            renderGroupList(groups);
-          }, 200);
-        }
-        
-        // Actualizar nuevamente después de un delay más largo para asegurar sincronización
-        setTimeout(() => {
-          socket.emit('allGroups');
-          if (currentView === 'groups') {
-            renderGroupList(groups);
-          }
-        }, 1000);
-      });
-
-      socket.on('error_message', (err) => {
-        console.error('Error del servidor:', err);
-        // Solo mostrar notificación si es un error real, no eventos de typing
-        if (err && err.message && !err.message.includes('escribiendo')) {
-          // Mostrar el mensaje de error específico del servidor
-          showNotification(err.message || 'Error en el servidor', 'error');
-          
-          // Si estamos en un grupo y hay un error, volver a la lista de grupos
-          if (currentView === 'groups' && activeGroup) {
-            switchView('groups');
-          }
-          
-          // Mostrar error en el modal correspondiente si está abierto
-          if (newChatModal.style.display === 'flex') {
-            showError(newChatErrorMessage, err.message || 'Error al crear el chat');
-          } else if (newGroupModal.style.display === 'flex') {
-            showError(newGroupErrorMessage, err.message || 'Error al crear el grupo');
-          } else if (inviteUsersModal.style.display === 'flex') {
-            showError(inviteUsersErrorMessage, err.message || 'Error al invitar usuarios');
-          }
-        }
-      });
-
-      // NUEVO: Escuchar todos los eventos para debug
-      socket.onAny((eventName, ...args) => {
-        console.log(`Evento recibido: ${eventName}`, args);
-      });
-
-      // Agregar este nuevo evento después de los otros eventos del socket
-      socket.on('userAddedToGroup', (data) => {
-        console.log('Usuario agregado a grupo:', data);
-        
-        // Mostrar notificación
-        showNotification(`Has sido agregado al grupo: ${data.groupName || 'Nuevo grupo'}`, 'info');
-        
-        // Actualizar inmediatamente la lista de grupos
-        socket.emit('allGroups');
-        
-        // Si estamos en la vista de grupos, renderizar inmediatamente
-        if (currentView === 'groups') {
-          setTimeout(() => {
-            renderGroupList(groups);
+            const groupElement = document.querySelector(`[data-group-id="${groupId}"]`);
+            if (groupElement) {
+              groupElement.click();
+            }
           }, 100);
+          
+          notification.close();
+        };
+        
+      } catch (error) {
+        console.error('Error al mostrar notificación del navegador:', error);
+      }
+    } else if (Notification.permission === 'default') {
+      console.log('Solicitando permisos de notificación...');
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          console.log('Permisos de notificación concedidos');
         }
       });
+    } else {
+      console.log('Notificaciones del navegador denegadas o no disponibles');
     }
+    
+    notificationSound.play().catch(e => console.log('Error al reproducir sonido:', e));
+  }
+  
+  setTimeout(() => {
+    processedMessages.delete(messageId);
+  }, 60000);
+}
 
-    function generateMessageId(data) {
-      // Crear un ID único basado en los datos del mensaje
-      const sender = data.usernameSender || data.username || data.sender || 'unknown';
-      const message = data.message || data.content || data.text || '';
-      const timestamp = data.date || data.created_at || data.timestamp || Date.now();
-      
-      return `${sender}_${message}_${timestamp}`;
+function handleTypingChat(data) {
+  let username = null;
+  let chatId = null;
+  
+  if (typeof data === 'string') {
+    if (data.includes(' esta escribiendo')) {
+      username = data.split(' esta escribiendo')[0];
+    } else {
+      username = data;
     }
-
-    function handleIncomingChatMessage(data) {
-      console.log('Procesando mensaje de chat:', data);
-      
-      // Validar datos básicos
-      if (!data || !data.message || !data.usernameSender) {
-        console.log('Mensaje de chat inválido ignorado:', data);
-        return;
-      }
-      
-      // Determinar si es mensaje saliente o entrante
-      const isOutgoing = data.usernameSender === currentUser.username;
-      const senderName = data.usernameSender;
-      
-      console.log('Mensaje de chat - Remitente:', senderName, 'Es propio:', isOutgoing);
-      
-      // IMPORTANTE: Si es nuestro propio mensaje, NO lo mostramos porque ya lo mostramos al enviarlo
-      if (isOutgoing) {
-        console.log('Mensaje propio ignorado para evitar duplicación');
-        return;
-      }
-      
-      // Generar ID único para este mensaje
-      const messageId = generateMessageId(data);
-      
-      // Si ya procesamos este mensaje, ignorarlo
-      if (processedMessages.has(messageId)) {
-        console.log('Mensaje duplicado ignorado:', messageId);
-        return;
-      }
-      
-      // Marcar como procesado
-      processedMessages.add(messageId);
-      
-      // Buscar el chat correspondiente para obtener el chatId
-      let messageChatId = null;
-      
-      // Si tenemos el chatId en los datos, usarlo
-      if (data.chatId) {
-        messageChatId = data.chatId;
-      } else {
-        // Si no, buscar el chat basado en los usuarios involucrados
-        const chat = chats.find(c => 
-          (c.user1_username === data.usernameSender && c.user2_username === currentUser.username) ||
-          (c.user2_username === data.usernameSender && c.user1_username === currentUser.username) ||
-          (c.user1_username === currentUser.username && c.user2_username === data.usernameReceiver) ||
-          (c.user2_username === currentUser.username && c.user1_username === data.usernameReceiver)
-        );
-        if (chat) {
-          messageChatId = chat.id;
-        }
-      }
-      
-      // Si estamos en el chat activo, mostrar el mensaje
-      if (activeChat && messageChatId && activeChat.id === messageChatId && currentView === 'chats') {
-        // Mostrar el mensaje con el nombre correcto del remitente
-        addMessage(senderName, data.message, new Date(data.date), false, 'chat');
-      } else if (messageChatId) {
-        // Solo mostrar notificaciones para mensajes de otros usuarios y cuando no estamos en el chat
-        if (!unreadMessages[messageChatId]) {
-          unreadMessages[messageChatId] = 0;
-        }
-        unreadMessages[messageChatId]++;
-        
-        // Actualizar el badge en la lista de chats
-        updateUnreadBadge(messageChatId, 'chat');
-        
-        // Mostrar notificación en la aplicación
-        showNotification(`Nuevo mensaje de ${senderName}: ${data.message}`, 'message');
-        
-        // Mostrar notificación del navegador si tenemos permisos
-        if (Notification.permission === 'granted') {
-          try {
-            const notification = new Notification(`Nuevo mensaje de ${senderName}`, {
-              body: data.message,
-              icon: '/favicon.ico',
-              tag: `chat-${messageChatId}`,
-              requireInteraction: false,
-              silent: false
-            });
-            
-            // Auto-cerrar la notificación después de 5 segundos
-            setTimeout(() => {
-              notification.close();
-            }, 5000);
-            
-            // Hacer clic en la notificación para enfocar la ventana y abrir el chat
-            notification.onclick = function() {
-              window.focus();
-              
-              // Cambiar a la vista de chats si no estamos ahí
-              if (currentView !== 'chats') {
-                switchView('chats');
-              }
-              
-              // Buscar y hacer clic en el chat correspondiente
-              setTimeout(() => {
-                const chatElement = document.querySelector(`[data-chat-id="${messageChatId}"]`);
-                if (chatElement) {
-                  chatElement.click();
-                }
-              }, 100);
-              
-              notification.close();
-            };
-            
-          } catch (error) {
-            console.error('Error al mostrar notificación del navegador:', error);
-          }
-        } else if (Notification.permission === 'default') {
-          // Si no hemos pedido permisos, pedirlos ahora
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              console.log('Permisos de notificación concedidos');
-            }
-          });
-        }
-        
-        // Reproducir sonido de notificación
-        notificationSound.play().catch(e => console.log('Error al reproducir sonido:', e));
-      }
-      
-      // Limpiar mensajes procesados después de un tiempo para evitar que crezca demasiado
-      setTimeout(() => {
-        processedMessages.delete(messageId);
-      }, 60000); // 1 minuto
+  } else if (data && typeof data === 'object') {
+    username = data.username || data.user || data.sender;
+    chatId = data.chatId || data.chat_id;
+  }
+  
+  if (!username || username === 'undefined' || username.trim() === '') {
+    return;
+  }
+  
+  if (username && !chatId) {
+    const chat = chats.find(c => 
+      (c.user1_username === username || c.user2_username === username) && 
+      (c.user1_username === currentUser.username || c.user2_username === currentUser.username)
+    );
+    if (chat) {
+      chatId = chat.id;
     }
-
-    function handleIncomingGroupMessage(data, eventName = 'unknown') {
-      console.log(`Procesando mensaje de grupo (evento ${eventName}):`, data);
-      
-      // Validar datos básicos
-      if (!data || !data.message) {
-        console.log('Mensaje de grupo inválido ignorado:', data);
-        return;
-      }
-      
-      // Extraer información del mensaje según diferentes formatos posibles
-      let groupId = data.groupId || data.group_id || data.id;
-      let senderName = data.usernameSender || data.username || data.user || data.sender || 'Usuario desconocido';
-      let message = data.message || data.content || data.text;
-      let messageDate = data.date || data.created_at || data.timestamp || new Date();
-      
-      // Validar que el senderName no sea undefined
-      if (!senderName || senderName === 'undefined' || senderName.trim() === '') {
-        console.log('Mensaje de grupo con sender undefined ignorado:', data);
-        return;
-      }
-      
-      // Si no tenemos groupId pero tenemos un grupo activo, usar ese
-      if (!groupId && activeGroup) {
-        groupId = activeGroup.id;
-        console.log('Usando ID del grupo activo:', groupId);
-      }
-      
-      // Determinar si es mensaje saliente o entrante
-      const isOutgoing = senderName === currentUser.username;
-      
-      console.log('Mensaje de grupo - Remitente:', senderName, 'Es propio:', isOutgoing);
-      console.log('Datos extraídos:', { groupId, senderName, message, activeGroupId: activeGroup?.id, currentView });
-      
-      // IMPORTANTE: Si es nuestro propio mensaje, NO lo mostramos porque ya lo mostramos al enviarlo
-      if (isOutgoing) {
-        console.log('Mensaje propio ignorado para evitar duplicación');
-        return;
-      }
-      
-      // Generar ID único para este mensaje
-      const messageId = `${eventName}_${senderName}_${message}_${groupId}_${messageDate}`;
-      
-      // Si ya procesamos este mensaje, ignorarlo
-      if (processedMessages.has(messageId)) {
-        console.log('Mensaje duplicado ignorado:', messageId);
-        return;
-      }
-      
-      // Marcar como procesado
-      processedMessages.add(messageId);
-      
-      // Buscar el nombre del grupo para las notificaciones
-      const group = groups.find(g => g.id == groupId);
-      const groupName = group ? group.name : 'Grupo desconocido';
-      
-      // Verificar si estamos en el grupo activo Y en la vista de grupos
-      const isInActiveGroup = activeGroup && groupId && activeGroup.id == groupId && currentView === 'groups';
-      
-      console.log('¿Estamos en el grupo activo?', isInActiveGroup, {
-        activeGroup: activeGroup?.id,
-        messageGroupId: groupId,
-        currentView,
-        comparison: activeGroup?.id == groupId
-      });
-      
-      if (isInActiveGroup) {
-        console.log('Mostrando mensaje en grupo activo de:', senderName);
-        
-        // Mostrar el mensaje con el nombre correcto del remitente
-        addMessage(senderName, message, new Date(messageDate), false, 'group');
-      } else if (groupId) {
-        // Solo mostrar notificaciones para mensajes de otros usuarios y cuando no estamos en el grupo
-        console.log('Mensaje de grupo para notificación:', groupId, senderName, 'Grupo:', groupName);
-        
-        if (!unreadGroupMessages[groupId]) {
-          unreadGroupMessages[groupId] = 0;
-        }
-        unreadGroupMessages[groupId]++;
-        
-        // Actualizar el badge en la lista de grupos
-        updateUnreadBadge(groupId, 'group');
-        
-        // Mostrar notificación en la aplicación
-        showNotification(`Nuevo mensaje en ${groupName} de ${senderName}: ${message}`, 'message');
-        
-        // Mostrar notificación del navegador si tenemos permisos
-        if (Notification.permission === 'granted') {
-          try {
-            console.log('Creando notificación del navegador para grupo:', groupName);
-            const notification = new Notification(`Nuevo mensaje en ${groupName}`, {
-              body: `${senderName}: ${message}`,
-              icon: '/favicon.ico',
-              tag: `group-${groupId}`,
-              requireInteraction: false,
-              silent: false
-            });
-            
-            // Auto-cerrar la notificación después de 5 segundos
-            setTimeout(() => {
-              notification.close();
-            }, 5000);
-            
-            // Hacer clic en la notificación para enfocar la ventana y abrir el grupo
-            notification.onclick = function() {
-              window.focus();
-              
-              // Cambiar a la vista de grupos si no estamos ahí
-              if (currentView !== 'groups') {
-                switchView('groups');
-              }
-              
-              // Buscar y hacer clic en el grupo correspondiente
-              setTimeout(() => {
-                const groupElement = document.querySelector(`[data-group-id="${groupId}"]`);
-                if (groupElement) {
-                  groupElement.click();
-                }
-              }, 100);
-              
-              notification.close();
-            };
-            
-          } catch (error) {
-            console.error('Error al mostrar notificación del navegador:', error);
-          }
-        } else if (Notification.permission === 'default') {
-          // Si no hemos pedido permisos, pedirlos ahora
-          console.log('Solicitando permisos de notificación...');
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              console.log('Permisos de notificación concedidos');
-            }
-          });
-        } else {
-          console.log('Notificaciones del navegador denegadas o no disponibles');
-        }
-        
-        // Reproducir sonido de notificación
-        notificationSound.play().catch(e => console.log('Error al reproducir sonido:', e));
-      }
-      
-      // Limpiar mensajes procesados después de un tiempo para evitar que crezca demasiado
-      setTimeout(() => {
-        processedMessages.delete(messageId);
-      }, 60000); // 1 minuto
+  }
+  
+  if (username && chatId && username !== currentUser.username) {
+    showTypingIndicatorSidebar(chatId, username, 'chat');
+    
+    if (activeChat && activeChat.id == chatId && currentView === 'chats') {
+      typingIndicator.textContent = `${username} está escribiendo...`;
+      showTypingIndicator();
     }
+  }
+}
 
-    function handleTypingChat(data) {
-      // Manejar diferentes formatos de datos
-      let username = null;
-      let chatId = null;
-      
-      if (typeof data === 'string') {
-        // Si viene como string "username está escribiendo"
-        if (data.includes(' esta escribiendo')) {
-          username = data.split(' esta escribiendo')[0];
-        } else {
-          username = data;
-        }
-      } else if (data && typeof data === 'object') {
-        // Si viene como objeto
-        username = data.username || data.user || data.sender;
-        chatId = data.chatId || data.chat_id;
-      }
-      
-      // Validar que el username no sea undefined
-      if (!username || username === 'undefined' || username.trim() === '') {
-        return;
-      }
-      
-      // Si no tenemos chatId, buscar el chat basándose en el username
-      if (username && !chatId) {
-        const chat = chats.find(c => 
-          (c.user1_username === username || c.user2_username === username) && 
-          (c.user1_username === currentUser.username || c.user2_username === currentUser.username)
-        );
-        if (chat) {
-          chatId = chat.id;
-        }
-      }
-      
-      // Solo mostrar si tenemos datos válidos y no es el usuario actual
-      if (username && chatId && username !== currentUser.username) {
-        // Mostrar indicador en la barra lateral
-        showTypingIndicatorSidebar(chatId, username, 'chat');
-        
-        // Si estamos en el chat activo, mostrar también el indicador principal
-        if (activeChat && activeChat.id == chatId && currentView === 'chats') {
-          typingIndicator.textContent = `${username} está escribiendo...`;
-          showTypingIndicator();
-        }
-      }
+function handleTypingGroup(data) {
+  let username = null;
+  
+  if (typeof data === 'string') {
+    if (data.includes(' esta escribiendo')) {
+      username = data.split(' esta escribiendo')[0];
+    } else {
+      username = data;
     }
-
-    function handleTypingGroup(data) {
-      let username = null;
-      
-      if (typeof data === 'string') {
-        if (data.includes(' esta escribiendo')) {
-          username = data.split(' esta escribiendo')[0];
-        } else {
-          username = data;
-        }
-      } else if (data && typeof data === 'object') {
-        username = data.username || data.user || data.sender;
-      }
-      
-      // Validar que el username no sea undefined
-      if (!username || username === 'undefined' || username.trim() === '') {
-        return;
-      }
-      
-      // Solo mostrar si tenemos datos válidos y no es el usuario actual
-      if (username && username !== currentUser.username) {
-        // Si estamos en el grupo activo, mostrar el indicador principal
-        if (activeGroup && currentView === 'groups') {
-          typingIndicator.textContent = `${username} está escribiendo...`;
-          showTypingIndicator();
-        }
-      }
+  } else if (data && typeof data === 'object') {
+    username = data.username || data.user || data.sender;
+  }
+  
+  if (!username || username === 'undefined' || username.trim() === '') {
+    return;
+  }
+  
+  if (username && username !== currentUser.username) {
+    if (activeGroup && currentView === 'groups') {
+      typingIndicator.textContent = `${username} está escribiendo...`;
+      showTypingIndicator();
     }
+  }
+}
 
-    function updateUnreadBadge(id, type) {
-      const selector = type === 'chat' ? `.chat-item[data-chat-id="${id}"]` : `.chat-item[data-group-id="${id}"]`;
-      const chatItem = document.querySelector(selector);
-      if (chatItem) {
-        // Eliminar badge existente si hay
-        const existingBadge = chatItem.querySelector('.chat-notification-badge');
-        if (existingBadge) {
-          existingBadge.remove();
-        }
-        
-        // Si hay mensajes no leídos, mostrar badge
-        const unreadCount = type === 'chat' ? unreadMessages[id] : unreadGroupMessages[id];
-        if (unreadCount && unreadCount > 0) {
-          const badge = document.createElement('div');
-          badge.className = 'chat-notification-badge';
-          badge.textContent = unreadCount;
-          chatItem.appendChild(badge);
-        }
-      }
+function updateUnreadBadge(id, type) {
+  const selector = type === 'chat' ? `.chat-item[data-chat-id="${id}"]` : `.chat-item[data-group-id="${id}"]`;
+  const chatItem = document.querySelector(selector);
+  
+  if (chatItem) {
+    const existingBadge = chatItem.querySelector('.chat-notification-badge');
+    if (existingBadge) {
+      existingBadge.remove();
     }
-
-    function showTypingIndicatorSidebar(id, username, type) {
-      const selector = type === 'chat' ? `.chat-item[data-chat-id="${id}"]` : `.chat-item[data-group-id="${id}"]`;
-      const chatItem = document.querySelector(selector);
-      
-      if (chatItem) {
-        let typingIndicator = chatItem.querySelector('.typing-indicator-sidebar');
-        
-        if (typingIndicator) {
-          typingIndicator.textContent = 'escribiendo...';
-          typingIndicator.style.display = 'inline';
-          
-          // Limpiar timeout anterior si existe
-          const key = `${type}_${id}`;
-          if (typingUsers[key]) {
-            clearTimeout(typingUsers[key]);
-          }
-          
-          // Ocultar después de 3 segundos
-          typingUsers[key] = setTimeout(() => {
-            typingIndicator.style.display = 'none';
-            delete typingUsers[key];
-          }, 3000);
-        }
-      }
+    
+    const unreadCount = type === 'chat' ? unreadMessages[id] : unreadGroupMessages[id];
+    if (unreadCount && unreadCount > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'chat-notification-badge';
+      badge.textContent = unreadCount;
+      chatItem.appendChild(badge);
     }
+  }
+}
 
-    function showTypingIndicator() {
-      typingIndicator.style.display = 'block';
+function showTypingIndicatorSidebar(id, username, type) {
+  const selector = type === 'chat' ? `.chat-item[data-chat-id="${id}"]` : `.chat-item[data-group-id="${id}"]`;
+  const chatItem = document.querySelector(selector);
+  
+  if (chatItem) {
+    let typingIndicator = chatItem.querySelector('.typing-indicator-sidebar');
+    
+    if (typingIndicator) {
+      typingIndicator.textContent = 'escribiendo...';
+      typingIndicator.style.display = 'inline';
       
-      // Limpiar el timeout anterior si existe
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
+      const key = `${type}_${id}`;
+      if (typingUsers[key]) {
+        clearTimeout(typingUsers[key]);
       }
       
-      // Ocultar el indicador después de 3 segundos
-      typingTimeout = setTimeout(() => {
+      typingUsers[key] = setTimeout(() => {
         typingIndicator.style.display = 'none';
+        delete typingUsers[key];
       }, 3000);
     }
+  }
+}
 
-    function switchView(view) {
-      currentView = view;
-      
-      // Actualizar tabs
-      chatsTab.classList.toggle('active', view === 'chats');
-      groupsTab.classList.toggle('active', view === 'groups');
-      
-      // Actualizar título y botón
-      if (view === 'chats') {
-        listTitle.textContent = 'Mis Chats';
-        newChatBtn.textContent = 'Nuevo Chat';
-        newChatBtn.onclick = () => {
-          hideError(newChatErrorMessage);
-          newChatModal.style.display = 'flex';
-        };
-        
-        // Solicitar chats del servidor y renderizar
-        if (socket) {
-          socket.emit('allChats');
-          // Actualizar múltiples veces para asegurar sincronización
-          setTimeout(() => socket.emit('allChats'), 300);
-          setTimeout(() => socket.emit('allChats'), 800);
-        }
-        renderChatList(chats);
-      } else {
-        listTitle.textContent = 'Mis Grupos';
-        newChatBtn.textContent = 'Nuevo Grupo';
-        newChatBtn.onclick = () => {
-          hideError(newGroupErrorMessage);
-          newGroupModal.style.display = 'flex';
-        };
-        
-        // Solicitar grupos del servidor y renderizar
-        if (socket) {
-          socket.emit('allGroups');
-          // Actualizar nuevamente después de un delay
-          setTimeout(() => socket.emit('allGroups'), 300);
-        }
-        renderGroupList(groups);
-      }
-      
-      // Si había un grupo activo, salir automáticamente ANTES de limpiar las variables
+function showTypingIndicator() {
+  typingIndicator.style.display = 'block';
+  
+  if (typingTimeout) {
+    clearTimeout(typingTimeout);
+  }
+  
+  typingTimeout = setTimeout(() => {
+    typingIndicator.style.display = 'none';
+  }, 3000);
+}
+
+function switchView(view) {
+  currentView = view;
+  
+  chatsTab.classList.toggle('active', view === 'chats');
+  groupsTab.classList.toggle('active', view === 'groups');
+  
+  if (view === 'chats') {
+    listTitle.textContent = 'Mis Chats';
+    newChatBtn.textContent = 'Nuevo Chat';
+    
+    if (socket) {
+      socket.emit('allChats');
+    }
+    renderChatList(chats);
+  } else {
+    listTitle.textContent = 'Mis Grupos';
+    newChatBtn.textContent = 'Nuevo Grupo';
+    
+    if (socket) {
+      socket.emit('allGroups');
+    }
+    renderGroupList(groups);
+  }
+  
+  if (activeGroup && socket) {
+    console.log('Saliendo automáticamente del grupo:', activeGroup.id);
+    socket.emit('leaveGroupForMoment');
+  }
+  
+  activeChat = null;
+  activeGroup = null;
+  groupUsers = [];
+  
+  chatMessages.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-icon">👋</div>
+      <p>Selecciona un ${view === 'chats' ? 'chat' : 'grupo'} para ver los mensajes</p>
+      <p>o crea uno nuevo para comenzar a chatear</p>
+    </div>
+  `;
+  chatInfoHeader.classList.remove('show');
+  groupUsersSection.classList.remove('show');
+  
+  messageInput.disabled = true;
+  sendBtn.disabled = true;
+}
+
+function renderChatList(chatData) {
+  chatList.innerHTML = '';
+  
+  if (!chatData || chatData.length === 0) {
+    chatList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <p>No tienes chats activos</p>
+        <p>Crea un nuevo chat para comenzar</p>
+      </div>
+    `;
+    return;
+  }
+  
+  chatData.forEach(chat => {
+    if (!chat || !chat.id || !chat.user1_username || !chat.user2_username) {
+      console.log('Chat con datos inválidos ignorado:', chat);
+      return;
+    }
+    
+    const chatItem = document.createElement('div');
+    chatItem.className = 'chat-item';
+    chatItem.dataset.chatId = chat.id;
+    
+    if (activeChat && activeChat.id === chat.id) {
+      chatItem.classList.add('active');
+    }
+    
+    const otherUser = chat.user1_username === currentUser.username ? chat.user2_username : chat.user1_username;
+    
+    chatItem.innerHTML = `
+      <div class="chat-item-name">
+        ${otherUser}
+        <span class="typing-indicator-sidebar"></span>
+      </div>
+      <div class="chat-item-preview">Chat con ${otherUser}</div>
+    `;
+    
+    if (unreadMessages[chat.id] && unreadMessages[chat.id] > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'chat-notification-badge';
+      badge.textContent = unreadMessages[chat.id];
+      chatItem.appendChild(badge);
+    }
+    
+    chatItem.addEventListener('click', () => {
       if (activeGroup && socket) {
-        console.log('Saliendo automáticamente del grupo:', activeGroup.id);
+        console.log('Saliendo automáticamente del grupo al cambiar a chat:', activeGroup.id);
         socket.emit('leaveGroupForMoment');
       }
       
-      // Limpiar chat activo DESPUÉS de usar las variables
-      activeChat = null;
+      document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+      chatItem.classList.add('active');
+      activeChat = chat;
       activeGroup = null;
+      groupUsers = [];
       
-      // Mostrar estado vacío en el área de mensajes
-      chatMessages.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">👋</div>
-          <p>Selecciona un ${view === 'chats' ? 'chat' : 'grupo'} para ver los mensajes</p>
-          <p>o crea uno nuevo para comenzar a chatear</p>
+      if (unreadMessages[chat.id]) {
+        unreadMessages[chat.id] = 0;
+        updateUnreadBadge(chat.id, 'chat');
+      }
+      
+      updateChatInfo();
+      
+      socket.emit('joinChat', chat.id, 50, 0);
+      chatMessages.innerHTML = '';
+      
+      messageInput.disabled = false;
+      sendBtn.disabled = false;
+    });
+    
+    chatList.appendChild(chatItem);
+  });
+}
+
+function renderGroupList(groupData) {
+  chatList.innerHTML = '';
+  
+  if (!groupData || groupData.length === 0) {
+    chatList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <p>No tienes grupos activos</p>
+        <p>Crea un nuevo grupo para comenzar</p>
+      </div>
+    `;
+    return;
+  }
+  
+  groupData.forEach(group => {
+    if (!group || !group.id || !group.name) {
+      console.log('Grupo con datos inválidos ignorado:', group);
+      return;
+    }
+    
+    const groupItem = document.createElement('div');
+    groupItem.className = 'chat-item';
+    groupItem.dataset.groupId = group.id;
+    
+    if (activeGroup && activeGroup.id === group.id) {
+      groupItem.classList.add('active');
+    }
+    
+    groupItem.innerHTML = `
+      <div class="chat-item-name">
+        ${group.name}
+        <span class="group-badge">Grupo</span>
+        <span class="typing-indicator-sidebar"></span>
+      </div>
+      <div class="chat-item-preview">Grupo con múltiples usuarios</div>
+    `;
+    
+    if (unreadGroupMessages[group.id] && unreadGroupMessages[group.id] > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'chat-notification-badge';
+      badge.textContent = unreadGroupMessages[group.id];
+      groupItem.appendChild(badge);
+    }
+    
+    groupItem.addEventListener('click', () => {
+      if (activeGroup && activeGroup.id !== group.id && socket) {
+        console.log('Saliendo automáticamente del grupo anterior:', activeGroup.id);
+        socket.emit('leaveGroupForMoment');
+      }
+      document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+      groupItem.classList.add('active');
+      activeGroup = group;
+      activeChat = null;
+      
+      currentUserRole = 'User';
+      groupUsers = [];
+      
+      if (unreadGroupMessages[group.id]) {
+        unreadGroupMessages[group.id] = 0;
+        updateUnreadBadge(group.id, 'group');
+      }
+      
+      updateChatInfo();
+      
+      console.log('Intentando unirse al grupo:', group.id);
+      console.log('Datos del grupo activo:', activeGroup);
+      
+      Array.from(processedMessages).forEach(id => {
+        if (id.includes(`_${group.id}_`)) {
+          processedMessages.delete(id);
+        }
+      });
+      
+      socket.emit('joinGroup', group.id, 50, 0);
+      socket.emit('usersGroup', group.id);
+      chatMessages.innerHTML = '';
+      
+      messageInput.disabled = false;
+      sendBtn.disabled = false;
+    });
+    
+    chatList.appendChild(groupItem);
+  });
+}
+
+function updateChatInfo() {
+  if (currentView === 'chats' && activeChat) {
+    const otherUser = activeChat.user1_username === currentUser.username ? 
+      activeChat.user2_username : activeChat.user1_username;
+    
+    chatInfoTitle.textContent = `Chat con ${otherUser}`;
+    chatInfoSubtitle.textContent = 'Chat privado';
+    chatInfoHeader.classList.add('show');
+    groupActions.style.display = 'none';
+    chatActions.style.display = 'flex';
+    groupUsersSection.classList.remove('show');
+  } else if (currentView === 'groups' && activeGroup) {
+    chatInfoTitle.textContent = activeGroup.name;
+    chatInfoSubtitle.textContent = `Grupo - ${currentUserRole === 'Admin' ? 'Administrador' : 'Miembro'}`;
+    chatInfoHeader.classList.add('show');
+    
+    groupActions.style.display = 'flex';
+    groupUsersSection.classList.add('show');
+    
+    if (currentUserRole === 'Admin') {
+      chatActions.style.display = 'flex';
+    } else {
+      chatActions.style.display = 'none';
+    }
+    
+    renderGroupUsersInline();
+  }
+}
+
+function renderMessages(messages, type) {
+  const systemMessages = Array.from(chatMessages.querySelectorAll('.message')).filter(
+    msg => msg.classList.contains('system-message')
+  );
+  chatMessages.innerHTML = '';
+  systemMessages.forEach(msg => chatMessages.appendChild(msg));
+  
+  if (!messages || messages.length === 0) {
+    addSystemMessage(`No hay mensajes en este ${type === 'chat' ? 'chat' : 'grupo'}`);
+    return;
+  }
+  
+  messages.forEach(msg => {
+    if (!msg || !msg.message) {
+      return;
+    }
+    
+    const isOutgoing = type === 'chat' ? 
+      msg.sender === currentUser.id :
+      msg.sender === currentUser.id;
+    
+    const senderName = type === 'chat' ? 
+      (isOutgoing ? currentUser.username : msg.sender_username) :
+      (isOutgoing ? currentUser.username : msg.username);
+    
+    if (!senderName || senderName === 'undefined') {
+      return;
+    }
+    
+    addMessage(
+      senderName,
+      msg.message,
+      new Date(msg.created_at || Date.now()),
+      isOutgoing,
+      type,
+      msg.id,
+      msg.edited
+    );
+  });
+  
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addSystemMessage(text) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'message system-message';
+  messageDiv.style.textAlign = 'center';
+  messageDiv.style.float = 'none';
+  messageDiv.style.clear = 'both';
+  messageDiv.style.background = '#f0f0f0';
+  messageDiv.style.padding = '0.5rem';
+  messageDiv.style.borderRadius = '8px';
+  messageDiv.style.margin = '0.5rem auto';
+  messageDiv.style.maxWidth = '80%';
+  
+  const timeString = new Date().toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  messageDiv.innerHTML = `
+    <div class="message-header">Sistema - ${timeString}</div>
+    <div class="message-content">${text}</div>
+  `;
+  
+  chatMessages.appendChild(messageDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addMessage(user, message, date, isOutgoing = false, type = 'chat', messageId = null, edited = false) {
+  if (!user || user === 'undefined') {
+    user = 'Usuario desconocido';
+  }
+  
+  const messageDiv = document.createElement('div');
+  messageDiv.dataset.messageId = messageId;
+  
+  if (messageId && typeof messageId === 'string' && messageId.startsWith('temp_')) {
+    messageDiv.dataset.isTemporary = 'true';
+  }
+  
+  if (type === 'group') {
+    messageDiv.className = `message message-group ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
+  } else {
+    messageDiv.className = `message ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
+  }
+  
+  const timeString = date.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  const escapedMessage = message.replace(/'/g, "\\'");
+  
+  messageDiv.innerHTML = `
+    <div class="message-header">${user}</div>
+    <div class="message-content">${message}</div>
+    <div class="message-time">
+      ${timeString}
+      ${edited ? '<span class="edited-indicator">(editado)</span>' : ''}
+    </div>
+  `;
+  
+  if (isOutgoing && messageId) {
+    const isTempId = typeof messageId === 'string' && messageId.startsWith('temp_');
+    
+    if (!isTempId) {
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'message-actions';
+      actionsDiv.innerHTML = `
+        <div class="message-menu">
+          <button class="message-menu-btn" onclick="toggleMessageMenu(this)">⋮</button>
+          <div class="message-menu-content">
+            <button class="message-menu-item" onclick="editMessage('${messageId}', '${escapedMessage}')">
+              ✏️ Editar
+            </button>
+            <button class="message-menu-item danger" onclick="deleteMessage('${messageId}')">
+              🗑️ Eliminar
+            </button>
+          </div>
         </div>
       `;
-      chatInfoHeader.classList.remove('show');
-      
-      // Deshabilitar input
-      messageInput.disabled = true;
-      sendBtn.disabled = true;
+      messageDiv.appendChild(actionsDiv);
     }
+  }
+  
+  chatMessages.appendChild(messageDiv);
+  
+  const clearDiv = document.createElement('div');
+  clearDiv.style.clear = 'both';
+  chatMessages.appendChild(clearDiv);
+  
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
-    // Agregar esta función después de las otras funciones de utilidad
-    function forceUpdateGroups() {
-      console.log('Forzando actualización de grupos...');
-      if (socket) {
-        socket.emit('allGroups');
-        setTimeout(() => {
-          socket.emit('allGroups');
-          if (currentView === 'groups') {
-            renderGroupList(groups);
-          }
-        }, 500);
-      }
-    }
-
-    // Agregar esta función después de forceUpdateGroups()
-    function forceUpdateChats() {
-      console.log('Forzando actualización de chats...');
-      if (socket) {
-        socket.emit('allChats');
-        setTimeout(() => {
-          socket.emit('allChats');
-          if (currentView === 'chats') {
-            renderChatList(chats);
-          }
-        }, 500);
-      }
-    }
-
-    function renderChatList(chatData) {
-      chatList.innerHTML = '';
-      
-      if (!chatData || chatData.length === 0) {
-        chatList.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">💬</div>
-            <p>No tienes chats activos</p>
-            <p>Crea un nuevo chat para comenzar</p>
+function updateTemporaryMessageId(tempId, realId, messageContent) {
+  console.log('Actualizando ID temporal:', tempId, 'a ID real:', realId);
+  
+  const tempElement = document.querySelector(`[data-message-id="${tempId}"]`);
+  if (tempElement) {
+    tempElement.dataset.messageId = realId;
+    tempElement.removeAttribute('data-is-temporary');
+    
+    const escapedMessage = messageContent.replace(/'/g, "\\'");
+    const actionsHtml = `
+      <div class="message-actions">
+        <div class="message-menu">
+          <button class="message-menu-btn" onclick="toggleMessageMenu(this)">⋮</button>
+          <div class="message-menu-content">
+            <button class="message-menu-item" onclick="editMessage('${realId}', '${escapedMessage}')">
+              ✏️ Editar
+            </button>
+            <button class="message-menu-item danger" onclick="deleteMessage('${realId}')">
+              🗑️ Eliminar
+            </button>
           </div>
-        `;
-        return;
-      }
+        </div>
+      </div>
+    `;
+    
+    tempElement.insertAdjacentHTML('beforeend', actionsHtml);
+    
+    console.log('ID temporal actualizado correctamente');
+  } else {
+    console.error('No se encontró el elemento con ID temporal:', tempId);
+  }
+}
+
+function sendMessage() {
+  const message = messageInput.value.trim();
+  if (message && socket && currentUser) {
+    if (currentView === 'chats' && activeChat) {
+      const receiverUsername = activeChat.user1 === currentUser.id ? 
+        activeChat.user2_username : activeChat.user1_username;
       
-      chatData.forEach(chat => {
-        // Validar que el chat tenga datos válidos pero menos restrictivo
-        if (!chat || !chat.id || !chat.user1_username || !chat.user2_username) {
-          console.log('Chat con datos inválidos ignorado:', chat);
-          return;
-        }
-        
-        const chatItem = document.createElement('div');
-        chatItem.className = 'chat-item';
-        chatItem.dataset.chatId = chat.id;
-        
-        if (activeChat && activeChat.id === chat.id) {
-          chatItem.classList.add('active');
-        }
-        
-        // Mostrar el nombre del otro usuario en el chat
-        const otherUser = chat.user1 === currentUser.id ? 
-          chat.user2_username : chat.user1_username;
-        
-        chatItem.innerHTML = `
-          <div class="chat-item-name">
-            ${otherUser}
-            <span class="typing-indicator-sidebar"></span>
-          </div>
-          <div class="chat-item-preview">Chat con ${otherUser}</div>
-        `;
-        
-        // Añadir badge de notificación si hay mensajes no leídos
-        if (unreadMessages[chat.id] && unreadMessages[chat.id] > 0) {
-          const badge = document.createElement('div');
-          badge.className = 'chat-notification-badge';
-          badge.textContent = unreadMessages[chat.id];
-          chatItem.appendChild(badge);
-        }
-        
-        chatItem.addEventListener('click', () => {
-          // Si había un grupo activo, salir automáticamente ANTES de limpiar
-          if (activeGroup && socket) {
-            console.log('Saliendo automáticamente del grupo al cambiar a chat:', activeGroup.id);
-            socket.emit('leaveGroupForMoment');
-          }
-          
-          document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-          chatItem.classList.add('active');
-          activeChat = chat;
-          activeGroup = null;
-          
-          // Marcar mensajes como leídos
-          if (unreadMessages[chat.id]) {
-            unreadMessages[chat.id] = 0;
-            updateUnreadBadge(chat.id, 'chat');
-          }
-          
-          // Mostrar información del chat
-          chatInfoTitle.textContent = `Chat con ${otherUser}`;
-          chatInfoSubtitle.textContent = 'Chat privado';
-          chatInfoHeader.classList.add('show');
-          groupActions.style.display = 'none';
-          
-          socket.emit('joinChat', chat.id, 50, 0);
-          chatMessages.innerHTML = '';
-          
-          // Habilitar input
-          messageInput.disabled = false;
-          sendBtn.disabled = false;
-        });
-        
-        chatList.appendChild(chatItem);
-      });
+      console.log('Enviando mensaje de chat:', message);
+      socket.emit('sendMessageChat', message, activeChat.id, receiverUsername);
+      
+      addMessage(currentUser.username, message, new Date(), true, 'chat', `temp_${Date.now()}`);
+      
+    } else if (currentView === 'groups' && activeGroup) {
+      console.log('Enviando mensaje de grupo:', activeGroup.id, message, currentUser.id);
+      socket.emit('sendMessageGroup', activeGroup.id, message, currentUser.id);
+      
+      addMessage(currentUser.username, message, new Date(), true, 'group', `temp_${Date.now()}`);
     }
+    
+    messageInput.value = '';
+    showRealtimeIndicator();
+  } else if (!activeChat && !activeGroup) {
+    showNotification(`Selecciona un ${currentView === 'chats' ? 'chat' : 'grupo'} primero`, 'error');
+  }
+}
 
-    function renderGroupList(groupData) {
-      chatList.innerHTML = '';
-      
-      if (!groupData || groupData.length === 0) {
-        chatList.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">👥</div>
-            <p>No tienes grupos activos</p>
-            <p>Crea un nuevo grupo para comenzar</p>
-          </div>
-        `;
-        return;
-      }
-      
-      groupData.forEach(group => {
-        // Validar que el grupo tenga datos válidos pero menos restrictivo
-        if (!group || !group.id || !group.name) {
-          console.log('Grupo con datos inválidos ignorado:', group);
-          return;
-        }
-        
-        const groupItem = document.createElement('div');
-        groupItem.className = 'chat-item';
-        groupItem.dataset.groupId = group.id;
-        
-        if (activeGroup && activeGroup.id === group.id) {
-          groupItem.classList.add('active');
-        }
-        
-        groupItem.innerHTML = `
-          <div class="chat-item-name">
-            ${group.name}
-            <span class="group-badge">Grupo</span>
-            <span class="typing-indicator-sidebar"></span>
-          </div>
-          <div class="chat-item-preview">Grupo con múltiples usuarios</div>
-        `;
-        
-        // Añadir badge de notificación si hay mensajes no leídos
-        if (unreadGroupMessages[group.id] && unreadGroupMessages[group.id] > 0) {
-          const badge = document.createElement('div');
-          badge.className = 'chat-notification-badge';
-          badge.textContent = unreadGroupMessages[group.id];
-          groupItem.appendChild(badge);
-        }
-        
-        groupItem.addEventListener('click', () => {
-          // Si había un grupo activo diferente, salir automáticamente
-          if (activeGroup && activeGroup.id !== group.id && socket) {
-            console.log('Saliendo automáticamente del grupo anterior:', activeGroup.id);
-            socket.emit('leaveGroupForMoment');
-          }
-          document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-          groupItem.classList.add('active');
-          activeGroup = group;
-          activeChat = null;
-          
-          // Marcar mensajes como leídos
-          if (unreadGroupMessages[group.id]) {
-            unreadGroupMessages[group.id] = 0;
-            updateUnreadBadge(group.id, 'group');
-          }
-          
-          // Mostrar información del grupo
-          chatInfoTitle.textContent = group.name;
-          chatInfoSubtitle.textContent = 'Grupo';
-          chatInfoHeader.classList.add('show');
-          groupActions.style.display = 'flex';
-          
-          console.log('Intentando unirse al grupo:', group.id);
-          console.log('Datos del grupo activo:', activeGroup);
-          
-          // Limpiar mensajes procesados para este grupo
-          Array.from(processedMessages).forEach(id => {
-            if (id.includes(`_${group.id}_`)) {
-              processedMessages.delete(id);
-            }
-          });
-          
-          // Enviar con los parámetros que espera el servidor: groupId, limit, offset
-          socket.emit('joinGroup', group.id, 50, 0);
-          chatMessages.innerHTML = '';
-          
-          // Habilitar input
-          messageInput.disabled = false;
-          sendBtn.disabled = false;
-        });
-        
-        chatList.appendChild(groupItem);
-      });
-    }
+// Event Listeners
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(registerForm);
+  const data = Object.fromEntries(formData.entries());
 
-    function renderMessages(messages, type) {
-      // Limpiar mensajes anteriores excepto el mensaje del sistema
-      const systemMessages = Array.from(chatMessages.querySelectorAll('.message')).filter(
-        msg => msg.classList.contains('system-message')
-      );
-      chatMessages.innerHTML = '';
-      systemMessages.forEach(msg => chatMessages.appendChild(msg));
-      
-      if (!messages || messages.length === 0) {
-        addSystemMessage(`No hay mensajes en este ${type === 'chat' ? 'chat' : 'grupo'}`);
-        return;
-      }
-      
-      messages.forEach(msg => {
-        // Validar que el mensaje tenga datos válidos
-        if (!msg || !msg.message) {
-          return;
-        }
-        
-        const isOutgoing = type === 'chat' ? 
-          msg.sender === currentUser.id :
-          msg.sender === currentUser.id;
-        
-        const senderName = type === 'chat' ? 
-          (isOutgoing ? currentUser.username : msg.sender_username) :
-          (isOutgoing ? currentUser.username : msg.username);
-        
-        // Validar que senderName no sea undefined
-        if (!senderName || senderName === 'undefined') {
-          return;
-        }
-        
-        addMessage(
-          senderName,
-          msg.message,
-          new Date(msg.created_at || Date.now()),
-          isOutgoing,
-          type
-        );
-      });
-      
-      // Scroll al final
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function addSystemMessage(text) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message system-message';
-      messageDiv.style.textAlign = 'center';
-      messageDiv.style.float = 'none';
-      messageDiv.style.clear = 'both';
-      messageDiv.style.background = '#f0f0f0';
-      messageDiv.style.padding = '0.5rem';
-      messageDiv.style.borderRadius = '8px';
-      messageDiv.style.margin = '0.5rem auto';
-      messageDiv.style.maxWidth = '80%';
-      
-      const timeString = new Date().toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      messageDiv.innerHTML = `
-        <div class="message-header">Sistema - ${timeString}</div>
-        <div class="message-content">${text}</div>
-      `;
-      
-      chatMessages.appendChild(messageDiv);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function addMessage(user, message, date, isOutgoing = false, type = 'chat') {
-      // Validar que user no sea undefined
-      if (!user || user === 'undefined') {
-        user = 'Usuario desconocido';
-      }
-      
-      const messageDiv = document.createElement('div');
-      
-      if (type === 'group') {
-        // Para grupos, aplicar clases según si es del usuario actual o no
-        messageDiv.className = `message message-group ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
-      } else {
-        // Para chats individuales, mensajes del usuario van a la derecha (outgoing)
-        messageDiv.className = `message ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
-      }
-      
-      const timeString = date.toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      messageDiv.innerHTML = `
-        <div class="message-header">${user}</div>
-        <div class="message-content">${message}</div>
-        <div class="message-time">${timeString}</div>
-      `;
-      
-      chatMessages.appendChild(messageDiv);
-      
-      // Limpiar el div para el siguiente mensaje
-      const clearDiv = document.createElement('div');
-      clearDiv.style.clear = 'both';
-      chatMessages.appendChild(clearDiv);
-      
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function sendMessage() {
-      const message = messageInput.value.trim();
-      if (message && socket && currentUser) {
-        if (currentView === 'chats' && activeChat) {
-          // Enviar mensaje de chat
-          const receiverUsername = activeChat.user1 === currentUser.id ? 
-            activeChat.user2_username : activeChat.user1_username;
-          
-          console.log('Enviando mensaje de chat:', message);
-          socket.emit('sendMessageChat', message, activeChat.id, receiverUsername);
-          
-          // Agregar mensaje inmediatamente para mostrar feedback visual
-          addMessage(currentUser.username, message, new Date(), true, 'chat');
-          
-        } else if (currentView === 'groups' && activeGroup) {
-          // Enviar mensaje de grupo
-          console.log('Enviando mensaje de grupo:', activeGroup.id, message, currentUser.id);
-          socket.emit('sendMessageGroup', activeGroup.id, message, currentUser.id);
-          
-          // Agregar mensaje inmediatamente para mostrar feedback visual
-          addMessage(currentUser.username, message, new Date(), true, 'group');
-        }
-        
-        messageInput.value = '';
-      } else if (!activeChat && !activeGroup) {
-        showNotification(`Selecciona un ${currentView === 'chats' ? 'chat' : 'grupo'} primero`, 'error');
-      }
-    }
-
-    // Event Listeners
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(registerForm);
-      const data = Object.fromEntries(formData.entries());
-
-      try {
-        hideError(regErrorMessage);
-        
-        const response = await fetch(`${API_BASE}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-          credentials: 'include'
-        });
-
-        const result = await response.json();
-        
-        if (response.ok) {
-          showNotification('Registro exitoso. Ahora puedes iniciar sesión.', 'success');
-          registerForm.reset();
-        } else {
-          showError(regErrorMessage, result.message || 'Error en el registro');
-        }
-      } catch (error) {
-        console.error('Error en registro:', error);
-        showError(regErrorMessage, 'Error de conexión. Intenta de nuevo.');
-      }
+  try {
+    hideError(regErrorMessage);
+    
+    const response = await fetch(`${API_BASE}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include'
     });
-
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(loginForm);
-      const data = Object.fromEntries(formData.entries());
-
-      try {
-        hideError(loginErrorMessage);
-        
-        const response = await fetch(`${API_BASE}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-          credentials: 'include'
-        });
-
-        const result = await response.json();
-        
-        if (response.ok) {
-          showNotification(`¡Bienvenido, ${result.username}!`, 'success');
-          showChat(result);
-          loginForm.reset();
-        } else {
-          showError(loginErrorMessage, result.message || 'Credenciales incorrectas');
-        }
-      } catch (error) {
-        console.error('Error en login:', error);
-        showError(loginErrorMessage, 'Error de conexión. Intenta de nuevo.');
-      }
-    });
-
-    logoutBtn.addEventListener('click', async () => {
-      try {
-        await fetch(`${API_BASE}/logout`, {
-          method: 'DELETE',
-          credentials: 'include'
-        });
-      } catch (error) {
-        console.error('Error en logout:', error);
-      } finally {
-        handleLogout();
-        showNotification('Sesión cerrada correctamente', 'info');
-      }
-    });
-
-    // Event listeners para tabs
-    chatsTab.addEventListener('click', () => switchView('chats'));
-    groupsTab.addEventListener('click', () => switchView('groups'));
-
-    let typingDebounce = null;
-
-    messageInput.addEventListener('input', () => {
-      // Emitir evento de "escribiendo" solo cuando hay texto
-      if (socket && messageInput.value.length > 0) {
-        // Limpiar el debounce anterior
-        if (typingDebounce) {
-          clearTimeout(typingDebounce);
-        }
-        
-        if (currentView === 'chats' && activeChat) {
-          // Enviar el evento de typing con el nombre del destinatario
-          const receiverUsername = activeChat.user1 === currentUser.id ? 
-            activeChat.user2_username : activeChat.user1_username;
-          
-          socket.emit('typingChat', receiverUsername);
-        } else if (currentView === 'groups' && activeGroup) {
-          // Enviar evento de typing para grupo
-          socket.emit('typingGroup');
-        }
-        
-        // Configurar debounce para dejar de enviar eventos después de 1 segundo sin escribir
-        typingDebounce = setTimeout(() => {
-          console.log('Debounce terminado');
-        }, 1000);
-      }
-    });
-
-    messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !messageInput.disabled) {
-        sendMessage();
-      }
-    });
-
-    sendBtn.addEventListener('click', sendMessage);
-
-    // Event listeners para modales de chat
-    closeModalBtn.addEventListener('click', () => {
-      newChatModal.style.display = 'none';
-    });
-
-    newChatForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const receiverUsername = document.getElementById('receiverUsername').value.trim();
-      
-      if (!receiverUsername) {
-        showError(newChatErrorMessage, 'Por favor completa todos los campos');
-        return;
-      }
-      
-      hideError(newChatErrorMessage);
-      
-      if (socket && currentUser) {
-        // El nombre del chat será automáticamente el nombre del destinatario
-        socket.emit('createChat', {
-          name: receiverUsername, // Usar el nombre del destinatario como nombre del chat
-          user1: currentUser.id,
-          user2: receiverUsername
-        });
-        
-        // Forzar actualización después de crear el chat
-        setTimeout(() => {
-          forceUpdateChats();
-        }, 1000);
-        
-        newChatForm.reset();
-        newChatModal.style.display = 'none';
-      }
-    });
-
-    // Event listeners para modales de grupo
-    closeGroupModalBtn.addEventListener('click', () => {
-      newGroupModal.style.display = 'none';
-    });
-
-    newGroupForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const groupName = document.getElementById('groupName').value.trim();
-      
-      if (!groupName) {
-        showError(newGroupErrorMessage, 'Por favor ingresa un nombre para el grupo');
-        return;
-      }
-      
-      hideError(newGroupErrorMessage);
-      
-      if (socket && currentUser) {
-        socket.emit('createGroup', groupName);
-        newGroupForm.reset();
-        newGroupModal.style.display = 'none';
-        
-        // Forzar actualización después de crear el grupo
-        setTimeout(() => {
-          forceUpdateGroups();
-        }, 1000);
-      }
-    });
-
-    // Event listeners para invitar usuarios
-    inviteUsersBtn.addEventListener('click', () => {
-      if (activeGroup) {
-        hideError(inviteUsersErrorMessage);
-        inviteUsersModal.style.display = 'flex';
-      }
-    });
-
-    closeInviteModalBtn.addEventListener('click', () => {
-      inviteUsersModal.style.display = 'none';
-    });
-
-    inviteUsersForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const usersToInvite = document.getElementById('usersToInvite').value.trim();
-      
-      if (!usersToInvite) {
-        showError(inviteUsersErrorMessage, 'Por favor ingresa al menos un usuario');
-        return;
-      }
-      
-      hideError(inviteUsersErrorMessage);
-      
-      // Convertir la lista de usuarios separados por comas en un array
-      const usersList = usersToInvite.split(',').map(user => user.trim()).filter(user => user);
-      
-      if (socket && currentUser && activeGroup && usersList.length > 0) {
-        // Enviar el array completo de usuarios según el socket.js: (usersList, groupId)
-        socket.emit('inviteGroup', usersList, activeGroup.id);
-        inviteUsersForm.reset();
-        inviteUsersModal.style.display = 'none';
-        showNotification(`Invitaciones enviadas a ${usersList.length} usuario(s)`, 'success');
-      }
-    });
-
-    // Event listeners para cerrar modales al hacer clic fuera
-    window.addEventListener('click', (e) => {
-      if (e.target === newChatModal) {
-        newChatModal.style.display = 'none';
-      }
-      if (e.target === newGroupModal) {
-        newGroupModal.style.display = 'none';
-      }
-      if (e.target === inviteUsersModal) {
-        inviteUsersModal.style.display = 'none';
-      }
-    });
-
-    // Inicializar aplicación
-    window.addEventListener('load', () => {
-      showLoading();
-      // Verificar el estado de autenticación al cargar la página
-      setTimeout(checkAuthStatus, 1000); // Simular carga
-    });
-
-    // Manejar errores de conexión del WebSocket
-    window.addEventListener('beforeunload', () => {
-      // Si hay un grupo activo, salir automáticamente
-      if (activeGroup && socket) {
-        console.log('Saliendo automáticamente del grupo al cerrar página:', activeGroup.id);
-        socket.emit('leaveGroupForMoment');
-      }
-      if (socket) {
-        socket.disconnect();
-      }
-    });
-
-    // Solicitar permiso para notificaciones
-    if ('Notification' in window) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            console.log('Permisos de notificación concedidos');
-            showNotification('Notificaciones del navegador activadas', 'success');
-          } else if (permission === 'denied') {
-            console.log('Permisos de notificación denegados');
-            showNotification('Las notificaciones del navegador están desactivadas', 'info');
-          }
-        });
-      } else if (Notification.permission === 'granted') {
-        console.log('Permisos de notificación ya concedidos');
-      }
+  
+    const result = await response.json();
+    
+    if (response.ok) {
+      showNotification('Registro exitoso. Ahora puedes iniciar sesión.', 'success');
+      registerForm.reset();
     } else {
-      console.log('Este navegador no soporta notificaciones');
+      showError(regErrorMessage, result.message || 'Error en el registro');
     }
-  </script>
+  } catch (error) {
+    console.error('Error en registro:', error);
+    showError(regErrorMessage, 'Error de conexión. Intenta de nuevo.');
+  }
+});
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(loginForm);
+  const data = Object.fromEntries(formData.entries());
+
+  try {
+    hideError(loginErrorMessage);
+    
+    const response = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include'
+    });
+
+    const result = await response.json();
+    
+    if (response.ok) {
+      showNotification(`¡Bienvenido, ${result.username}!`, 'success');
+      showChat(result);
+      loginForm.reset();
+    } else {
+      showError(loginErrorMessage, result.message || 'Credenciales incorrectas');
+    }
+  } catch (error) {
+    console.error('Error en login:', error);
+    showError(loginErrorMessage, 'Error de conexión. Intenta de nuevo.');
+  }
+});
+
+logoutBtn.addEventListener('click', async () => {
+  try {
+    await fetch(`${API_BASE}/logout`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+  } catch (error) {
+    console.error('Error en logout:', error);
+  } finally {
+    handleLogout();
+    showNotification('Sesión cerrada correctamente', 'info');
+  }
+});
+
+chatsTab.addEventListener('click', () => switchView('chats'));
+groupsTab.addEventListener('click', () => switchView('groups'));
+
+let typingDebounce = null;
+
+messageInput.addEventListener('input', () => {
+  if (socket && messageInput.value.length > 0) {
+    if (typingDebounce) {
+      clearTimeout(typingDebounce);
+    }
+    
+    if (currentView === 'chats' && activeChat) {
+      const receiverUsername = activeChat.user1 === currentUser.id ? 
+        activeChat.user2_username : activeChat.user1_username;
+      
+      socket.emit('typingChat', receiverUsername);
+    } else if (currentView === 'groups' && activeGroup) {
+      socket.emit('typingGroup');
+    }
+    
+    typingDebounce = setTimeout(() => {
+      console.log('Debounce terminado');
+    }, 1000);
+  }
+});
+
+messageInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && !messageInput.disabled) {
+    sendMessage();
+  }
+});
+
+sendBtn.addEventListener('click', sendMessage);
+
+closeModalBtn.addEventListener('click', () => {
+  newChatModal.style.display = 'none';
+});
+
+newChatBtn.addEventListener('click', () => {
+  if (!socketConnected) {
+    showNotification('Esperando conexión al servidor...', 'warning');
+    return;
+  }
+  
+  if (currentView === 'chats') {
+    hideError(newChatErrorMessage);
+    newChatModal.style.display = 'flex';
+  } else {
+    hideError(newGroupErrorMessage);
+    newGroupModal.style.display = 'flex';
+  }
+});
+
+newChatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const receiverUsername = document.getElementById('receiverUsername').value.trim();
+  
+  if (!receiverUsername) {
+    showError(newChatErrorMessage, 'Por favor completa todos los campos');
+    return;
+  }
+  
+  if (!socketConnected) {
+    showError(newChatErrorMessage, 'No hay conexión con el servidor');
+    return;
+  }
+  
+  hideError(newChatErrorMessage);
+  
+  if (socket && currentUser) {
+    socket.emit('createChat', {
+      name: receiverUsername,
+      user1: currentUser.id,
+      user2: receiverUsername
+    });
+    
+    newChatForm.reset();
+    newChatModal.style.display = 'none';
+    showNotification('Creando chat...', 'info');
+  }
+});
+
+closeGroupModalBtn.addEventListener('click', () => {
+  newGroupModal.style.display = 'none';
+});
+
+newGroupForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const groupName = document.getElementById('groupName').value.trim();
+  
+  if (!groupName) {
+    showError(newGroupErrorMessage, 'Por favor ingresa un nombre para el grupo');
+    return;
+  }
+  
+  if (!socketConnected) {
+    showError(newGroupErrorMessage, 'No hay conexión con el servidor');
+    return;
+  }
+  
+  hideError(newGroupErrorMessage);
+  
+  if (socket && currentUser) {
+    socket.emit('createGroup', groupName);
+    newGroupForm.reset();
+    newGroupModal.style.display = 'none';
+    showNotification('Creando grupo...', 'info');
+  }
+});
+
+inviteUsersBtn.addEventListener('click', () => {
+  if (activeGroup && currentUserRole === 'Admin') {
+    hideError(inviteUsersErrorMessage);
+    inviteUsersModal.style.display = 'flex';
+  } else {
+    showNotification('Solo los administradores pueden invitar usuarios', 'warning');
+  }
+});
+
+closeInviteModalBtn.addEventListener('click', () => {
+  inviteUsersModal.style.display = 'none';
+});
+
+inviteUsersForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const usersToInvite = document.getElementById('usersToInvite').value.trim();
+  
+  if (!usersToInvite) {
+    showError(inviteUsersErrorMessage, 'Por favor ingresa al menos un usuario');
+    return;
+  }
+  
+  hideError(inviteUsersErrorMessage);
+  
+  const usersList = usersToInvite.split(',').map(user => user.trim()).filter(user => user);
+  console.log(usersList)
+  
+  if (socket && currentUser && activeGroup && usersList.length > 0 && currentUserRole === 'Admin') {
+    socket.emit('inviteGroup', usersList, activeGroup.id);
+    inviteUsersForm.reset();
+    inviteUsersModal.style.display = 'none';
+    showNotification(`Invitaciones enviadas a ${usersList.length} usuario(s)`, 'success');
+  } else if (currentUserRole !== 'Admin') {
+    showError(inviteUsersErrorMessage, 'Solo los administradores pueden invitar usuarios');
+  }
+});
+
+editGroupBtn.addEventListener('click', () => {
+  if (activeGroup) {
+    hideError(editGroupErrorMessage);
+    editGroupName.value = activeGroup.name;
+    editGroupModal.style.display = 'flex';
+  }
+});
+
+closeEditGroupBtn.addEventListener('click', () => {
+  editGroupModal.style.display = 'none';
+});
+
+editGroupForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const newGroupName = editGroupName.value.trim();
+  
+  if (!newGroupName) {
+    showError(editGroupErrorMessage, 'Por favor ingresa un nombre para el grupo');
+    return;
+  }
+  
+  if (newGroupName === activeGroup.name) {
+    showError(editGroupErrorMessage, 'El nuevo nombre debe ser diferente al actual');
+    return;
+  }
+  
+  hideError(editGroupErrorMessage);
+  
+  if (socket && activeGroup) {
+    socket.emit('editGroup', activeGroup.id, newGroupName);
+    editGroupModal.style.display = 'none';
+    showNotification('Editando grupo...', 'info');
+  }
+});
+
+deleteChatBtn.addEventListener('click', () => {
+  const itemType = currentView === 'chats' ? 'chat' : 'grupo';
+  const itemName = currentView === 'chats' ? 
+    (activeChat?.user1_username === currentUser.username ? activeChat?.user2_username : activeChat?.user1_username) :
+    activeGroup?.name;
+  
+  if (currentView === 'groups' && currentUserRole !== 'Admin') {
+    showNotification('Solo los administradores pueden eliminar el grupo', 'warning');
+    return;
+  }
+  
+  showConfirmDialog(
+    `¿Eliminar ${itemType}?`,
+    `¿Estás seguro de que quieres eliminar el ${itemType} "${itemName}"? Esta acción no se puede deshacer.`,
+    () => {
+      if (socket) {
+        if (currentView === 'chats' && activeChat) {
+          const receiverUsername = activeChat.user1_username === currentUser.username ? 
+            activeChat.user2_username : activeChat.user1_username;
+          
+          socket.emit('deleteChat', activeChat?.id, receiverUsername);
+          showNotification('Eliminando chat...', 'info');
+        } else if (currentView === 'groups' && activeGroup && currentUserRole === 'Admin') {
+          socket.emit('deleteGroup', activeGroup.id, currentUserRole);
+          showNotification('Eliminando grupo...', 'info');
+        }
+        showRealtimeIndicator();
+      }
+    }
+  );
+});
+
+closeEditMessageBtn.addEventListener('click', () => {
+  editMessageModal.style.display = 'none';
+});
+
+editMessageForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const newMessage = editMessageText.value.trim();
+  
+  if (!newMessage) {
+    showError(editMessageErrorMessage, 'Por favor ingresa un mensaje');
+    return;
+  }
+  
+  hideError(editMessageErrorMessage);
+  
+  if (socket && selectedMessageForEdit) {
+    console.log('Editando mensaje:', selectedMessageForEdit, 'Nuevo texto:', newMessage);
+    
+    showNotification('Editando mensaje...', 'info');
+    showRealtimeIndicator();
+
+    if (currentView === 'chats' && activeChat) {
+      const receiverUsername = activeChat.user1_username === currentUser.username ? 
+        activeChat.user2_username : activeChat.user1_username;
+
+      socket.emit('editMessageChat', selectedMessageForEdit, newMessage, receiverUsername);
+      
+    } else if (currentView === 'groups' && activeGroup) {
+      socket.emit('editMessageGroup', selectedMessageForEdit, newMessage);
+    }
+    
+    editMessageModal.style.display = 'none';
+    selectedMessageForEdit = null;
+  }
+});
+
+confirmCancel.addEventListener('click', () => {
+  hideConfirmDialog();
+});
+
+confirmAccept.addEventListener('click', () => {
+  if (confirmCallback) {
+    confirmCallback();
+  }
+  hideConfirmDialog();
+});
+
+window.addEventListener('click', (e) => {
+  if (e.target === newChatModal) {
+    newChatModal.style.display = 'none';
+  }
+  if (e.target === newGroupModal) {
+    newGroupModal.style.display = 'none';
+  }
+  if (e.target === inviteUsersModal) {
+    inviteUsersModal.style.display = 'none';
+  }
+  if (e.target === editMessageModal) {
+    editMessageModal.style.display = 'none';
+  }
+  if (e.target === editGroupModal) {
+    editGroupModal.style.display = 'none';
+  }
+  if (e.target === confirmDialog) {
+    hideConfirmDialog();
+  }
+});
+
+window.addEventListener('load', () => {
+  showLoading();
+  setTimeout(checkAuthStatus, 1000);
+});
+
+window.addEventListener('beforeunload', () => {
+  if (activeGroup && socket) {
+    console.log('Saliendo automáticamente del grupo al cerrar página:', activeGroup.id);
+    socket.emit('leaveGroupForMoment');
+  }
+  if (socket) {
+    socket.disconnect();
+  }
+});
+
+if ('Notification' in window) {
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        console.log('Permisos de notificación concedidos');
+        showNotification('Notificaciones del navegador activadas', 'success');
+      } else if (permission === 'denied') {
+        console.log('Permisos de notificación denegados');
+        showNotification('Las notificaciones del navegador están desactivadas', 'info');
+      }
+    });
+  } else if (Notification.permission === 'granted') {
+    console.log('Permisos de notificación ya concedidos');
+  }
+} else {
+  console.log('Este navegador no soporta notificaciones');
+}
+</script>
 </body>
 </html>
