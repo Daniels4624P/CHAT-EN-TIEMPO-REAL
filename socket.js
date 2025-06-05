@@ -3,6 +3,7 @@ import AppError from "./utils/appError.js"
 import jwt from "jsonwebtoken"
 import config from "./config/config.js"
 import * as chatService from "./services/chatService.js"
+import client from "./utils/redis.js"
 import { findUserIdByUsername, getUser } from "./services/authService.js"
 
 const initializeSocket = (io) => {
@@ -24,18 +25,16 @@ const initializeSocket = (io) => {
             return next(new AppError('No se pudo autenticar el usuario', 401))
         }
     })
-    
-    const users = new Map()
 
     io.on('connection', async (socket) => {
         socket.connectedRoom = ""
         console.log('Usuario conectado')
-        users.set(socket.user.username, socket.id)
+        client.set(`users:${socket.user.username}`, socket.id)
         socket.emit('allChats', await chatService.getAllChats(socket.user.id))
         socket.emit('allGroups', await chatService.getAllGroups(socket.user.id))
 
         socket.on('typingChat', (usernameReceiver) => {
-            const userReceiverId = users.get(usernameReceiver)
+            const userReceiverId = client.get(`users:${usernameReceiver}`)
             socket.to(userReceiverId).emit('typingChat', `${usernameReceiver} esta escribiendo`)
         })
         socket.on('joinChat', async (chatId, limit, offset) => {
@@ -59,7 +58,7 @@ const initializeSocket = (io) => {
                     user1: socket.user.id,
                     user2: data.user2
                 }
-                const user2Id = users.get(chatData.user2)
+                const user2Id = client.get(`users:${chatData.user2}`)
                 const newChat = await chatService.createChat(chatData)
                 if (user2Id) {
                     io.to(user2Id).emit('createChat', newChat)
@@ -80,7 +79,7 @@ const initializeSocket = (io) => {
                     usernameReceiver 
                 }
                 const newMessage = await chatService.sendMessageChat(messageData)
-                const socketIdReceiver = users.get(usernameReceiver)
+                const socketIdReceiver = client.get(`users:${usernameReceiver}`)
                 const date = new Date()
                 if (socketIdReceiver) {
                     io.to(socketIdReceiver).emit('sendMessageChat', { message: msg, date, usernameReceiver, usernameSender: socket.user.username })
@@ -147,7 +146,7 @@ const initializeSocket = (io) => {
                     const user = usersList[i]
                     const userInformation = await findUserIdByUsername(user)
                     const group = await chatService.inviteUsersToGroup(userInformation.id, groupId, 'User')
-                    const userSocketId = users.get(user)
+                    const userSocketId = client.get(`users:${user}`)
                     if (userSocketId) {
                         socket.to(userSocketId).emit('inviteGroup', { username: user,  groupId})
                     }
@@ -161,7 +160,7 @@ const initializeSocket = (io) => {
         socket.on('editMessageChat', async (id, newMessage, usernameReceiver) => {
             try {
                 const editMessage = await chatService.editMessageChat(id, newMessage)
-                const socketIdReceiver = users.get(usernameReceiver)
+                const socketIdReceiver = client.get(`users:${usernameReceiver}`)
                 if (socketIdReceiver) {
                     io.to(socketIdReceiver).emit('editMessageChat', editMessage)
                 }
@@ -191,7 +190,7 @@ const initializeSocket = (io) => {
         socket.on('deleteMessageChat', async (id, usernameReceiver) => {
             try {
                 const message = await chatService.deleteMessageChat(id)
-                const socketIdReceiver = users.get(usernameReceiver)
+                const socketIdReceiver = client.get(`users:${usernameReceiver}`)
                 if (socketIdReceiver) {
                     io.to(socketIdReceiver).emit('deleteMessageChat', {
                         id, message
@@ -231,7 +230,7 @@ const initializeSocket = (io) => {
         socket.on('deleteChat', async (chatId, usernameReceiver) => {
             try {
                 const deleteMessage = await chatService.deleteChat(chatId)
-                const socketIdReceiver = users.get(usernameReceiver)
+                const socketIdReceiver = client.get(`users${usernameReceiver}`)
                 if (socketIdReceiver) {
                     io.to(socketIdReceiver).emit('deleteChat', deleteMessage)
                 }
@@ -274,7 +273,7 @@ const initializeSocket = (io) => {
         socket.on('disconnect', () => {
             console.log('Usuario desconectado')
             socket.leave(socket.connectedRoom)
-            users.delete(socket.user.username)
+            client.del(`users:${socket.user.username}`)
         })    
     })
 }
